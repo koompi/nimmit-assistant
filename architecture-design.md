@@ -160,16 +160,23 @@ src/
 
 ### File Storage
 
-**Primary: AWS S3 (or Cloudflare R2)**
+**Primary: Cloudflare R2**
 
-**Why S3/R2?**
-- ✅ Scalable, reliable
-- ✅ Pay-per-use
-- ✅ CDN integration
+**Why Cloudflare R2?**
+- ✅ S3-compatible API (easy migration path if needed)
+- ✅ Zero egress fees (S3 charges for downloads)
+- ✅ Cheaper storage ($0.015/GB vs S3's $0.023/GB)
+- ✅ Automatic CDN integration with Cloudflare
 - ✅ Direct browser uploads (presigned URLs)
-- ✅ R2 is S3-compatible but cheaper ($0.015/GB vs $0.023/GB)
+- ✅ High performance globally
+- ✅ Scalable and reliable
 
-**Backup: Cloudflare R2 or Backblaze B2**
+**Cost Comparison:**
+- R2: $0.015/GB/month storage + $0 egress
+- S3: $0.023/GB/month storage + $0.09/GB egress
+- **At 500GB storage + 2TB egress/month: R2 = $7.50, S3 = $192**
+
+**Backup: Backblaze B2 or cross-region R2 replication**
 
 ### AI/ML Services
 
@@ -211,7 +218,7 @@ src/
 - Serverless Redis (pay-per-use)
 - Good for low-traffic start
 
-**File Storage:** Cloudflare R2 or AWS S3
+**File Storage:** Cloudflare R2
 
 ---
 
@@ -256,7 +263,7 @@ src/
         │              │              │             │
         ▼              ▼              ▼             ▼
 ┌──────────────┐ ┌──────────┐ ┌─────────────┐ ┌──────────┐
-│   MongoDB    │ │  Redis   │ │  AWS S3/R2  │ │  Stripe  │
+│   MongoDB    │ │  Redis   │ │Cloudflare R2│ │  Stripe  │
 │  (Database)  │ │ (Cache/  │ │(File Store) │ │(Payments)│
 │              │ │  Queue)  │ │             │ │          │
 └──────────────┘ └──────────┘ └─────────────┘ └──────────┘
@@ -1020,7 +1027,7 @@ router.get('/admin/users', requireAuth, requireRole(['admin']), getUsersHandler)
 
 ## File Storage Strategy
 
-### Storage Solution: AWS S3 or Cloudflare R2
+### Storage Solution: Cloudflare R2
 
 **Bucket Structure:**
 ```
@@ -1044,7 +1051,7 @@ nimmit-files/
             └── {filename}
 ```
 
-### File Upload Flow (Client → S3)
+### File Upload Flow (Client → R2)
 
 **Direct Upload (Presigned URLs):**
 
@@ -1053,11 +1060,11 @@ nimmit-files/
    POST /jobs/:id/files/upload-url
    Body: { filename: 'design.psd', mimeType: 'image/vnd.adobe.photoshop' }
 
-2. Backend generates presigned S3 URL (valid for 15 min)
-   Response: { uploadUrl: 'https://s3...', fileId: 'abc123' }
+2. Backend generates presigned R2 URL (valid for 15 min)
+   Response: { uploadUrl: 'https://[account].r2.cloudflarestorage.com/...', fileId: 'abc123' }
 
-3. Client uploads file directly to S3 using presigned URL
-   PUT https://s3.amazonaws.com/...
+3. Client uploads file directly to R2 using presigned URL
+   PUT https://[account].r2.cloudflarestorage.com/...
 
 4. Client notifies backend of successful upload
    POST /jobs/:id/files
@@ -1068,9 +1075,10 @@ nimmit-files/
 
 **Benefits:**
 - ✅ No backend bandwidth usage
-- ✅ Faster uploads
-- ✅ S3 handles large files well
+- ✅ Faster uploads (Cloudflare's global network)
+- ✅ R2 handles large files well
 - ✅ Reduces backend server load
+- ✅ Zero egress fees (free downloads)
 
 ### File Download Flow
 
@@ -1082,12 +1090,12 @@ nimmit-files/
 
 2. Backend verifies authorization (user can access this job)
 
-3. Backend generates presigned S3 download URL (valid for 5 min)
+3. Backend generates presigned R2 download URL (valid for 5 min)
 
 4. Backend redirects to presigned URL
-   Response: 302 Redirect → https://s3...
+   Response: 302 Redirect → https://[account].r2.cloudflarestorage.com/...
 
-5. Client downloads file directly from S3
+5. Client downloads file directly from R2 (zero egress cost!)
 ```
 
 ### File Processing
@@ -1100,7 +1108,8 @@ nimmit-files/
 **Video Processing (Optional, Phase 2):**
 - Generate thumbnails
 - Convert to web-friendly formats
-- Consider: AWS MediaConvert or Cloudflare Stream
+- Cloudflare Stream (recommended) - integrates seamlessly with R2
+- Alternative: FFmpeg on backend for basic processing
 
 ### File Size Limits
 
@@ -1765,17 +1774,18 @@ REDIS_URL=redis://localhost:6379
 JWT_SECRET=your-secret-key-here
 JWT_REFRESH_SECRET=your-refresh-secret-here
 
-# File Storage
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
-AWS_REGION=us-east-1
-AWS_S3_BUCKET=nimmit-files
-
-# OR Cloudflare R2
+# File Storage - Cloudflare R2 (Primary)
 R2_ACCOUNT_ID=
 R2_ACCESS_KEY_ID=
 R2_SECRET_ACCESS_KEY=
 R2_BUCKET=nimmit-files
+R2_PUBLIC_URL=https://pub-xxxxxxxxxxxx.r2.dev
+
+# Alternative: AWS S3 (if needed)
+# AWS_ACCESS_KEY_ID=
+# AWS_SECRET_ACCESS_KEY=
+# AWS_REGION=us-east-1
+# AWS_S3_BUCKET=nimmit-files
 
 # Stripe
 STRIPE_SECRET_KEY=sk_test_...
@@ -1797,11 +1807,12 @@ SENTRY_DSN=
 
 **Database Backups:**
 - MongoDB Atlas: Automatic daily backups (7-day retention)
-- Additional weekly backups to S3 (3-month retention)
+- Additional weekly backups to R2 bucket (3-month retention)
 
 **File Backups:**
-- S3/R2 versioning enabled
-- Cross-region replication for critical files
+- R2 object versioning enabled
+- Cross-region R2 replication for critical files
+- Optional: Backblaze B2 for additional redundancy
 
 ---
 

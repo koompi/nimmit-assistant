@@ -12,8 +12,8 @@
                     │  └──────────┘  └──────────┘           │
                     │                                         │
                     │  ┌──────────┐  ┌──────────┐           │
-                    │  │SendGrid/ │  │   AWS    │           │
-                    │  │  Resend  │  │  S3/R2   │           │
+                    │  │SendGrid/ │  │Cloudflare│           │
+                    │  │  Resend  │  │    R2    │           │
                     │  └──────────┘  └──────────┘           │
                     │                                         │
                     └─────────────────────────────────────────┘
@@ -125,12 +125,13 @@
 │                                                                   │
 │  ┌─────────────────────┐                                         │
 │  │   File Storage      │                                         │
-│  │   (AWS S3 / R2)     │                                         │
+│  │  (Cloudflare R2)    │                                         │
 │  │                     │                                         │
 │  │  - Client uploads   │                                         │
 │  │  - Deliverables     │                                         │
 │  │  - Avatars          │                                         │
 │  │  - Portfolio        │                                         │
+│  │  - Zero egress fees │                                         │
 │  │                     │                                         │
 │  │  Cloudflare R2      │                                         │
 │  └─────────────────────┘                                         │
@@ -379,7 +380,7 @@
 │                    FILE UPLOAD WORKFLOW                          │
 └──────────────────────────────────────────────────────────────────┘
 
- CLIENT          FRONTEND         BACKEND         S3/R2
+ CLIENT          FRONTEND         BACKEND       Cloudflare R2
    │                │                │              │
    │ 1. Select file │                │              │
    ├───────────────▶│                │              │
@@ -437,8 +438,9 @@
 
 Benefits:
 ✅ Backend doesn't handle file data (no bandwidth usage)
-✅ Faster uploads (direct to S3/R2)
-✅ Scalable (S3/R2 handles load)
+✅ Faster uploads (direct to Cloudflare R2)
+✅ Scalable (R2 handles load)
+✅ Zero egress fees (free downloads from R2)
 ✅ Secure (presigned URL expires in 15 min)
 ```
 
@@ -727,13 +729,13 @@ Important Stripe Webhooks to Handle:
   │                 │ │                 │ │                 │
   │  Vercel Edge    │ │  Railway/Render │ │ Cloudflare R2   │
   │  Network        │ │                 │ │                 │
-  │                 │ │  ┌───────────┐  │ │  (or AWS S3)    │
-  │  - React SPA    │ │  │ Express   │  │ │                 │
-  │  - Static       │ │  │ API       │  │ │  Buckets:       │
-  │    Assets       │ │  │           │  │ │  - uploads      │
-  │  - Edge         │ │  │ Node.js   │  │ │  - deliverables │
-  │    Functions    │ │  │ Container │  │ │  - avatars      │
-  │                 │ │  └───────────┘  │ │  - portfolio    │
+  │                 │ │  ┌───────────┐  │ │                 │
+  │  - React SPA    │ │  │ Express   │  │ │  Buckets:       │
+  │  - Static       │ │  │ API       │  │ │  - uploads      │
+  │    Assets       │ │  │           │  │ │  - deliverables │
+  │  - Edge         │ │  │ Node.js   │  │ │  - avatars      │
+  │    Functions    │ │  │ Container │  │ │  - portfolio    │
+  │                 │ │  └───────────┘  │ │  Free egress!   │
   └─────────────────┘ └────────┬────────┘ └─────────────────┘
                                │
            ┌───────────────────┼───────────────────┐
