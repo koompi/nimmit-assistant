@@ -1,8 +1,7 @@
 # Nimmit Platform - Technical Architecture Design
 
-**Version:** 1.0
-**Last Updated:** January 21, 2026
-**Status:** Architecture Design Phase
+**Last Updated:** January 22, 2026
+**Status:** Pre-MVP Development Phase
 
 ---
 
@@ -36,27 +35,41 @@ On-demand marketplace connecting US clients with skilled Cambodian workers for r
 2. **Workers** - Cambodia-based service providers
 3. **Admins** - Platform managers overseeing operations
 
+### Business Model
+**Quality-First Approach:**
+- Curated talent pool (hired and vetted by platform)
+- Core salaried team (15 workers) + flex workers hired as needed
+- Focus on long-term client relationships with predictable workflow
+- Scale by hiring quality workers when capacity is exceeded (not by opening marketplace)
+
+**Worker Tiers:**
+1. **Core Team** - Salaried workers with guaranteed income and priority assignments
+2. **Flex Workers** - Hired per job/hour basis when capacity exceeded, all quality-vetted
+
 ### Key Differentiators
-- AI-powered job matching
+- AI-powered job matching and quality checks
 - Timezone advantage (overnight delivery)
 - Credit-based subscription model
-- Real-time status tracking
-- Quality guarantees
+- Curated quality (not open marketplace)
+- Long-term client relationships
 
 ---
 
 ## Technology Stack
 
-### Frontend (Client + Worker + Admin Apps)
+### Full-Stack Framework: Next.js 14+ (App Router)
 
-**Framework: Vite.js + React + TypeScript**
+**Framework: Next.js + React + TypeScript**
 
-**Why Vite?**
-- ✅ Extremely fast development server (HMR)
-- ✅ Optimized production builds
-- ✅ Better DX than Create React App
-- ✅ Native ES modules support
-- ✅ TypeScript support out of the box
+**Why Next.js instead of separate Vite + Express?**
+- ✅ Full-stack in single codebase (API routes + frontend)
+- ✅ Team already uses it (StadiumX experience)
+- ✅ Server-side rendering for SEO and performance
+- ✅ Edge functions for global performance
+- ✅ Built-in API routes (replaces Express backend)
+- ✅ TypeScript throughout
+- ✅ Simplified deployment (single app to Vercel)
+- ✅ Easier to maintain and iterate quickly
 
 **UI Libraries:**
 - **Styling:** TailwindCSS (utility-first, fast development)
@@ -70,71 +83,83 @@ On-demand marketplace connecting US clients with skilled Cambodian workers for r
 - **File Upload:** react-dropzone
 - **Rich Text Editor:** Tiptap or Lexical (for messaging)
 
-**Key Frontend Features:**
+**Project Structure:**
 ```
-├── Client Portal
-│   ├── Job submission form
-│   ├── Job status dashboard
-│   ├── Messaging interface
-│   ├── File upload/download
-│   ├── Subscription management
-│   └── Payment history
+nimmit/
+├── src/
+│   ├── app/                    # Next.js App Router
+│   │   ├── (auth)/            # Auth pages (login, register)
+│   │   ├── (client)/          # Client portal routes
+│   │   ├── (worker)/          # Worker portal routes
+│   │   ├── (admin)/           # Admin dashboard routes
+│   │   ├── api/               # API routes (replaces Express)
+│   │   │   ├── auth/
+│   │   │   ├── jobs/
+│   │   │   ├── users/
+│   │   │   ├── payments/
+│   │   │   ├── ai/            # AI endpoints
+│   │   │   └── webhooks/
+│   │   └── layout.tsx
+│   │
+│   ├── components/             # React components
+│   │   ├── ui/                # shadcn/ui components
+│   │   ├── client/            # Client-specific
+│   │   ├── worker/            # Worker-specific
+│   │   └── shared/            # Shared components
+│   │
+│   ├── lib/                    # Utilities and libraries
+│   │   ├── db/                # Database models
+│   │   ├── ai/                # AI integrations
+│   │   ├── auth/              # Auth utilities
+│   │   ├── storage/           # R2 file storage
+│   │   └── payments/          # Stripe integration
+│   │
+│   └── types/                  # TypeScript types
 │
-├── Worker Portal
-│   ├── Available jobs feed
-│   ├── Accept/decline interface
-│   ├── Active jobs dashboard
-│   ├── File delivery system
-│   ├── Time tracking
-│   └── Earnings dashboard
-│
-└── Admin Portal
-    ├── Capacity dashboard
-    ├── Job assignment/routing
-    ├── Quality metrics
-    ├── Revenue tracking
-    ├── Worker performance
-    └── Client management
+├── public/                     # Static assets
+└── tests/
 ```
 
-### Backend
+### Backend (Next.js API Routes)
 
-**Framework: Node.js + Express.js + TypeScript**
+**Framework: Next.js API Routes (replaces Express)**
 
-**Why Express?**
-- ✅ Mature, battle-tested
-- ✅ Large ecosystem
-- ✅ Flexible and unopinionated
-- ✅ Good TypeScript support
-- ✅ Easy to understand and maintain
+**Why Next.js API Routes?**
+- ✅ Integrated with frontend (no CORS issues)
+- ✅ Serverless by default on Vercel
+- ✅ TypeScript throughout
+- ✅ Easier to maintain single codebase
+- ✅ Built-in edge runtime support
 
-**Alternative Considered:** Fastify (faster, modern) - Consider for v2 if performance becomes issue
-
-**Backend Structure:**
+**API Routes Structure:**
 ```
-src/
-├── config/          # Configuration (env, database, etc.)
-├── models/          # Mongoose models
-├── controllers/     # Route controllers
-├── services/        # Business logic
-├── middleware/      # Auth, validation, error handling
-├── routes/          # API routes
-├── utils/           # Helpers, utilities
-├── jobs/            # Background jobs (Bull/BullMQ)
-├── websockets/      # Socket.io handlers
-└── server.ts        # Entry point
+/app/api/
+├── auth/              # Authentication endpoints
+├── jobs/              # Job CRUD operations
+│   └── [id]/
+│       ├── accept/
+│       ├── messages/
+│       ├── files/
+│       └── ...
+├── users/             # User management
+├── payments/          # Stripe integration
+├── ai/                # AI-powered features
+│   ├── analyze-job/
+│   ├── match-workers/
+│   └── quality-check/
+└── webhooks/          # External webhooks (Stripe, etc.)
 ```
 
-**Key Backend Libraries:**
+**Key Libraries:**
 - **Validation:** Zod (shared with frontend)
-- **Authentication:** Passport.js + JWT
-- **File Upload:** Multer + Sharp (image processing)
-- **Email:** Nodemailer or SendGrid
+- **Authentication:** NextAuth.js
+- **File Upload:** Direct to R2 with presigned URLs
+- **Image Processing:** Sharp
+- **Email:** SendGrid or Resend
 - **Job Queue:** Bull or BullMQ (Redis-based)
-- **WebSockets:** Socket.io
-- **Logging:** Winston or Pino
-- **Testing:** Jest + Supertest
-- **API Documentation:** Swagger/OpenAPI
+- **Logging:** Built-in Next.js logging + Sentry
+- **Testing:** Jest + Playwright
+- **AI:** OpenAI SDK
 
 ### Database
 
@@ -198,16 +223,14 @@ src/
 
 ### Hosting & Infrastructure
 
-**Frontend:** Vercel or Netlify
+**Full-Stack App:** Vercel
+- Next.js native deployment
 - Automatic deployments from Git
-- CDN included
+- Global CDN included
 - Free SSL
 - Edge functions support
-
-**Backend:** Railway, Render, or AWS (ECS/Fargate)
-- Railway: Easiest, good DX, affordable
-- Render: Similar to Railway, slightly cheaper
-- AWS: More control, scalable, but complex
+- Serverless API routes
+- Single deployment (simpler than separate frontend/backend)
 
 **Database:** MongoDB Atlas (managed)
 - Free tier for development
@@ -333,11 +356,28 @@ src/
 
   // Worker-specific fields
   workerProfile?: {
+    workerType: 'core' | 'flex',  // NEW: Worker tier
+
+    // Core workers (salaried)
+    employment?: {
+      status: 'active' | 'inactive',
+      startDate: Date,
+      monthlySalary: number,       // Fixed salary
+      currency: 'USD',
+      paymentSchedule: 'monthly',
+    },
+
+    // Flex workers (per job/hour)
+    flexTerms?: {
+      hourlyRate: number,           // $8-12/hour
+      availability: 'active' | 'inactive',
+      minimumHours?: number,
+    },
+
     skills: string[],  // ['video-editing', 'graphic-design', ...]
     skillLevel: {
       [skillId: string]: 'junior' | 'mid' | 'senior'
     },
-    hourlyRate: number,
     portfolio: {
       title: string,
       description: string,
@@ -346,6 +386,8 @@ src/
     }[],
     availability: {
       status: 'available' | 'busy' | 'offline',
+      capacity: number,              // Max concurrent jobs
+      currentLoad: number,            // Current active jobs
       hoursPerWeek: number,
       timezone: string,
     },
@@ -363,9 +405,9 @@ src/
 
   // Client-specific fields
   clientProfile?: {
-    company: string,
-    industry: string,
-    subscriptionTier: 'starter' | 'growth' | 'scale' | 'payAsYouGo',
+    company?: string,
+    industry?: string,
+    subscriptionTier: 'starter' | 'growth' | 'scale' | 'payAsYouGo' | 'enterprise',
     credits: {
       available: number,
       used: number,
@@ -373,11 +415,22 @@ src/
     },
     stripeCustomerId: string,
     stripeSubscriptionId?: string,
-    preferredWorkers: ObjectId[], // Worker IDs
+
+    // NEW: Long-term relationship tracking
+    relationship: {
+      status: 'trial' | 'active' | 'at_risk' | 'churned',
+      startDate: Date,
+      monthlyJobsAverage: number,
+      preferredWorkers: ObjectId[],    // Favorite workers
+      preferredSkills: string[],
+      communicationStyle: string,      // AI-learned preferences
+    },
+
     stats: {
       totalJobsPosted: number,
       totalSpent: number,
       averageRating: number,
+      retentionMonths: number,
     },
   },
 
@@ -394,9 +447,11 @@ src/
 **Indexes:**
 - `email` (unique)
 - `role`
+- `workerProfile.workerType`
 - `workerProfile.skills` (for matching)
 - `workerProfile.availability.status`
 - `clientProfile.subscriptionTier`
+- `clientProfile.relationship.status`
 
 ---
 
@@ -412,7 +467,18 @@ src/
   title: string,
   description: string,
   category: 'video-editing' | 'graphic-design' | 'web-development' | 'social-media' | 'bookkeeping' | 'other',
-  requiredSkills: string[],
+
+  // AI-extracted information
+  aiAnalysis: {
+    extractedSkills: string[],
+    estimatedHours: number,
+    complexity: 'simple' | 'medium' | 'complex',
+    suggestedPrice: number,
+    confidenceScore: number,      // How confident AI is
+    rawResponse: string,          // GPT response for debugging
+  },
+
+  requiredSkills: string[],       // Confirmed skills after AI + human review
 
   // Pricing
   pricing: {
@@ -430,20 +496,33 @@ src/
   },
 
   // Status workflow
-  status: 'pending' | 'matching' | 'assigned' | 'in_progress' | 'review' | 'revision' | 'completed' | 'cancelled',
+  status: 'pending' | 'ai_analyzing' | 'matching' | 'assigned' | 'in_progress' | 'review' | 'revision' | 'completed' | 'cancelled',
 
-  // Matching
-  aiMatchingScore?: {
-    workerId: ObjectId,
-    score: number,
-    reasoning: string,
-  }[],
+  // Matching (AI + Manual)
+  matching: {
+    algorithm: 'ai' | 'manual_admin' | 'client_requested',
 
-  matchingHistory: {
-    workerId: ObjectId,
-    action: 'offered' | 'accepted' | 'declined' | 'timeout',
-    timestamp: Date,
-  }[],
+    aiScores?: {
+      workerId: ObjectId,
+      score: number,
+      reasoning: string,          // Why this worker was matched
+      breakdown: {
+        skillMatch: number,
+        availability: number,
+        performance: number,
+        responseTime: number,
+      },
+    }[],
+
+    matchingHistory: {
+      workerId: ObjectId,
+      action: 'offered' | 'accepted' | 'declined' | 'timeout' | 'reassigned',
+      timestamp: Date,
+      reason?: string,
+    }[],
+
+    assignedBy?: 'ai' | ObjectId, // Admin ID if manual
+  },
 
   // Assignment
   assignedAt?: Date,
@@ -471,6 +550,14 @@ src/
     version: number,
     uploadedAt: Date,
     uploadedBy: ObjectId,
+
+    // AI quality check
+    qualityCheck?: {
+      passed: boolean,
+      score: number,
+      issues: string[],
+      checkedAt: Date,
+    },
   }[],
 
   // Communication
@@ -738,6 +825,171 @@ src/
 **Indexes:**
 - `userId` + `timestamp`
 - `entity` + `entityId`
+
+---
+
+#### 8. **WorkerCapacity Collection** (NEW - Capacity Management)
+
+```typescript
+{
+  _id: ObjectId,
+  date: Date (indexed),           // Daily snapshot
+
+  overall: {
+    totalWorkers: number,
+    coreWorkers: number,
+    flexWorkers: number,
+    availableWorkers: number,
+    busyWorkers: number,
+  },
+
+  bySkill: {
+    [skillName: string]: {
+      totalWorkers: number,
+      available: number,
+      currentJobs: number,
+      capacityUtilization: number, // percentage
+    }
+  },
+
+  // Predictive data (AI-generated)
+  forecast: {
+    nextWeek: {
+      expectedJobs: number,
+      expectedHours: number,
+      capacityShortfall?: {
+        skills: string[],
+        hoursShort: number,
+        recommendHire: boolean,
+      },
+    },
+  },
+
+  // Hiring recommendations
+  hiringNeeded: {
+    skill: string,
+    urgency: 'low' | 'medium' | 'high',
+    estimatedStartDate: Date,
+    reasoning: string,
+  }[],
+
+  createdAt: Date,
+}
+```
+
+**Indexes:**
+- `date`
+
+---
+
+#### 9. **WorkerPayments Collection** (NEW - Worker Payouts)
+
+```typescript
+{
+  _id: ObjectId,
+  workerId: ObjectId (ref: Users, indexed),
+  workerType: 'core' | 'flex',
+
+  // Period
+  period: {
+    start: Date,
+    end: Date,
+    type: 'monthly' | 'weekly' | 'custom',
+  },
+
+  // Core workers (salary)
+  salary?: {
+    baseSalary: number,
+    bonuses: {
+      type: 'performance' | 'overtime' | 'holiday',
+      amount: number,
+      reason: string,
+    }[],
+    deductions: {
+      type: string,
+      amount: number,
+      reason: string,
+    }[],
+    totalSalary: number,
+  },
+
+  // Flex workers (hours/jobs)
+  flexEarnings?: {
+    jobs: {
+      jobId: ObjectId,
+      hours: number,
+      hourlyRate: number,
+      amount: number,
+    }[],
+    totalHours: number,
+    totalEarnings: number,
+  },
+
+  // Payment
+  payment: {
+    method: 'bank_transfer' | 'baray' | 'wise' | 'payoneer',
+    status: 'pending' | 'processing' | 'paid' | 'failed',
+    paidAt?: Date,
+    transactionId?: string,
+    currency: 'USD',
+  },
+
+  createdAt: Date,
+  updatedAt: Date,
+}
+```
+
+**Indexes:**
+- `workerId` + `period.start`
+- `payment.status`
+
+---
+
+#### 10. **ClientMetrics Collection** (NEW - Client Health Tracking)
+
+```typescript
+{
+  _id: ObjectId,
+  clientId: ObjectId (ref: Users, indexed),
+  month: Date (indexed),          // First day of month
+
+  jobMetrics: {
+    totalJobs: number,
+    completedJobs: number,
+    cancelledJobs: number,
+    averageDeliveryTime: number,  // hours
+    revisionsRequested: number,
+  },
+
+  financialMetrics: {
+    totalSpent: number,
+    averageJobCost: number,
+    creditsUsed: number,
+    creditsRolledOver: number,
+  },
+
+  relationshipMetrics: {
+    satisfactionScore: number,    // 1-5
+    responseTime: number,         // hours to first message
+    repeatWorkers: number,        // How many same workers used
+    consistencyScore: number,     // How predictable is job volume
+  },
+
+  // AI-generated insights
+  insights: {
+    clientType: 'consistent' | 'sporadic' | 'growing' | 'declining',
+    churnRisk: number,            // 0-1 probability
+    upsellOpportunity: boolean,
+    recommendations: string[],
+  },
+
+  createdAt: Date,
+}
+```
+
+**Indexes:**
+- `clientId` + `month`
+- `insights.churnRisk`
 
 ---
 
@@ -1134,9 +1386,57 @@ nimmit-files/
 
 ## AI Integration
 
-### Use Case: Job-to-Worker Matching
+**Strategy:** AI is a core differentiator from Day 1, not a future add-on. The platform combines AI automation with human expertise for optimal results.
 
-**Goal:** Automatically match incoming jobs with the best available workers based on skills, availability, performance history, and workload.
+### AI-Powered Features (Priority Order)
+
+#### Phase 1 MVP - Core AI Features
+
+**1. Intelligent Job Intake (Day 1)**
+- AI analyzes job description and extracts structured data
+- Identifies required skills, estimated hours, complexity
+- Suggests pricing automatically
+- Flags unclear requirements
+
+**2. Smart Worker Matching (Day 1)**
+- AI scores workers based on multiple factors
+- Generates reasoning for why each worker is a good match
+- Admin can review and override
+
+**3. Brief Enhancement Assistant (Week 2-3)**
+- Helps clients write better briefs
+- Asks clarifying questions
+- Generates structured requirements for workers
+
+#### Phase 2 - Quality & Communication
+
+**4. Quality Pre-Check**
+- AI reviews deliverables before client sees them
+- Catches obvious issues (resolution, format, etc.)
+- Reduces revision requests
+
+**5. Communication Assistant**
+- Improves worker English in messages
+- Suggests professional responses
+- Translates intent clearly
+
+#### Phase 3 - Intelligence & Prediction
+
+**6. Capacity Forecasting**
+- Predicts when to hire based on job trends
+- Alerts admin before capacity issues
+- Recommends which skills to hire for
+
+**7. Client Health Monitoring**
+- Identifies at-risk clients
+- Suggests retention actions
+- Predicts churn probability
+
+---
+
+### Implementation: Job-to-Worker Matching
+
+**Goal:** Match incoming jobs with the best available workers based on skills, availability, performance history, and workload.
 
 ### AI Matching Algorithm
 
@@ -1289,6 +1589,125 @@ socket.on('worker:assigned', ({ jobId, worker }) => {});
 
 ---
 
+## Worker Management & Capacity Planning
+
+### Worker Tier System
+
+**Core Workers (Salaried):**
+- Current team of 15 workers
+- Fixed monthly salary ($400-800/month based on skill level)
+- Guaranteed work and income
+- Priority job assignment
+- Long-term growth path
+- Benefits: Predictable income, stability, training
+- Tracked as `workerType: 'core'` in database
+
+**Flex Workers (Hourly/Job-based):**
+- Hired when core team capacity exceeded
+- Paid $8-12/hour per job completed
+- No guaranteed hours
+- Quality-vetted before hiring
+- Benefits: Extra income, flexible schedule
+- Tracked as `workerType: 'flex'` in database
+
+### Capacity Monitoring System
+
+**Automated Daily Checks:**
+```typescript
+// Monitor capacity utilization by skill
+function checkCapacity() {
+  for each skill:
+    utilization = currentJobs / maxCapacity
+
+    if utilization > 85%:
+      urgency = 'high'
+      recommendHiring = true
+      notifyAdmin()
+
+    if utilization > 70%:
+      urgency = 'medium'
+      monitorClosely = true
+}
+```
+
+**Admin Dashboard View:**
+```
+Current Capacity:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Video Editing:     [████████░░] 80% (4/5 workers busy)
+Graphic Design:    [██████░░░░] 60% (3/5 workers busy)
+Web Development:   [██████████] 100% (3/3 workers busy) ⚠️
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Hiring Recommendations:
+🔴 URGENT: Web Development - Need +1 developer by Feb 1
+🟡 SOON: Video Editing - Monitor, may need +1 by Feb 15
+🟢 OK: Graphic Design - Capacity sufficient
+```
+
+### Hiring Trigger System
+
+**Automatic Triggers:**
+1. **Capacity Alert** - When utilization > 85% for 3+ days
+2. **Wait Time Alert** - When jobs wait >24hrs for assignment
+3. **Forecast Alert** - AI predicts shortage in next 2 weeks
+
+**Hiring Workflow:**
+```
+1. Capacity alert triggered
+2. Admin reviews recommendation
+3. Decision: Core (salary) or Flex (hourly)?
+4. Post job or recruit from network
+5. Skills assessment + test task
+6. Interview (video call)
+7. Onboarding training
+8. First assignment with oversight
+```
+
+### Worker Onboarding Process
+
+**For All New Hires:**
+1. Application received
+2. Portfolio review + skills assessment
+3. Paid test project (real client work with oversight)
+4. Video interview
+5. Training:
+   - Platform usage
+   - Quality standards
+   - Client communication best practices
+   - US cultural norms (existing guide)
+6. Activate on platform
+7. First 3 jobs with mentor oversight
+8. Full independence after quality verification
+
+### Long-Term Client Relationship Management
+
+**Goal:** Predictable, recurring revenue from repeat clients
+
+**Client Status Tracking:**
+```typescript
+type ClientStatus =
+  | 'trial'      // First 1-3 jobs
+  | 'active'     // Regular usage (2+ jobs/month)
+  | 'at_risk'    // Declining usage or low satisfaction
+  | 'churned'    // No jobs in 60+ days
+```
+
+**Retention Strategies:**
+- Assign preferred workers (client favorites)
+- Proactive check-ins from admin
+- Dedicated account manager for enterprise clients
+- AI-learned preferences (communication style, deliverable preferences)
+- Early warning system for at-risk clients
+
+**AI-Powered Client Insights:**
+- Predict churn risk based on usage patterns
+- Identify upsell opportunities
+- Recommend retention actions
+- Track satisfaction trends
+
+---
+
 ## Payment Integration
 
 ### Stripe Integration
@@ -1420,6 +1839,108 @@ function deductCredits(clientId, jobId, creditsUsed) {
   });
 }
 ```
+
+---
+
+### Worker Payout System
+
+**Core Workers (Monthly Salary):**
+```typescript
+// Automated monthly payout (1st of each month)
+async function processMonthlySalaries() {
+  const coreWorkers = await User.find({
+    role: 'worker',
+    'workerProfile.workerType': 'core',
+    'workerProfile.employment.status': 'active',
+  });
+
+  for (const worker of coreWorkers) {
+    const salary = worker.workerProfile.employment.monthlySalary;
+
+    // Create payment record
+    await WorkerPayment.create({
+      workerId: worker._id,
+      workerType: 'core',
+      period: {
+        start: startOfMonth(new Date()),
+        end: endOfMonth(new Date()),
+        type: 'monthly',
+      },
+      salary: {
+        baseSalary: salary,
+        bonuses: [], // Performance bonuses if applicable
+        deductions: [],
+        totalSalary: salary,
+      },
+      payment: {
+        method: 'bank_transfer', // or 'baray' for Cambodian workers
+        status: 'pending',
+        currency: 'USD',
+      },
+    });
+
+    // Process payment via bank transfer or Baray.io
+    await processPayment(worker, salary);
+
+    // Send notification
+    await notifyWorker(worker, 'salary_processed', { amount: salary });
+  }
+}
+```
+
+**Flex Workers (Per Job/Hour):**
+```typescript
+// Process flex worker earnings (weekly or bi-weekly)
+async function processFlexWorkerEarnings(workerId: string, periodEnd: Date) {
+  // Get all completed jobs in period
+  const jobs = await Job.find({
+    workerId,
+    status: 'completed',
+    completedAt: { $gte: startOfPeriod(periodEnd), $lte: periodEnd },
+  });
+
+  const earnings = jobs.map(job => {
+    const hours = job.totalTimeSpent / 60; // minutes to hours
+    const rate = job.flexWorker.agreedRate; // $8-12/hour
+
+    return {
+      jobId: job._id,
+      hours,
+      hourlyRate: rate,
+      amount: hours * rate,
+    };
+  });
+
+  const totalEarnings = earnings.reduce((sum, e) => sum + e.amount, 0);
+
+  await WorkerPayment.create({
+    workerId,
+    workerType: 'flex',
+    period: {
+      start: startOfPeriod(periodEnd),
+      end: periodEnd,
+      type: 'weekly',
+    },
+    flexEarnings: {
+      jobs: earnings,
+      totalHours: earnings.reduce((sum, e) => sum + e.hours, 0),
+      totalEarnings,
+    },
+    payment: {
+      method: 'bank_transfer',
+      status: 'pending',
+      currency: 'USD',
+    },
+  });
+
+  return totalEarnings;
+}
+```
+
+**Payment Methods:**
+- **Bank Transfer:** Direct deposit for Cambodian bank accounts
+- **Baray.io:** Can integrate with existing Baray payment system if applicable
+- **Wise/Payoneer:** For international transfers if needed
 
 ---
 
@@ -1818,101 +2339,154 @@ SENTRY_DSN=
 
 ## Development Phases
 
-### Phase 1: MVP (Weeks 1-6)
+### Phase 1: MVP (Weeks 1-6) - Fast Track
 
-**Goal:** Launch with core features for manual operations
+**Goal:** Launch with core features + AI job intake
 
-**Features:**
-- ✅ User authentication (client, worker, admin)
-- ✅ Job creation (simple form)
-- ✅ Manual job assignment (admin)
-- ✅ File upload/download (basic)
-- ✅ Job status tracking
-- ✅ Basic messaging
-- ✅ Stripe payment integration (one-time payments)
-- ✅ Basic admin dashboard
+**Timeline:** 4-6 weeks (your team can move fast)
+
+**Week 1-2: Foundation**
+- [ ] Initialize Next.js 14 project with App Router
+- [ ] Set up MongoDB Atlas + Upstash Redis
+- [ ] Implement NextAuth.js authentication
+- [ ] Build core data models (Users, Jobs)
+- [ ] Set up Cloudflare R2 integration
+- [ ] Build basic UI components (shadcn/ui)
+
+**Week 3-4: Core Features + AI**
+- [ ] Client portal: Job creation form
+- [ ] **AI job analysis endpoint (OpenAI integration)** ✨
+- [ ] Worker portal: Available jobs view
+- [ ] Admin portal: Manual job assignment
+- [ ] File upload/download (R2 presigned URLs)
+- [ ] Basic messaging system
+
+**Week 5-6: Payments & Launch**
+- [ ] Stripe integration (start with pay-per-job)
+- [ ] Job status workflow (pending → completed)
+- [ ] Email notifications (SendGrid/Resend)
+- [ ] Admin dashboard (capacity view)
+- [ ] Testing with 3-5 real clients
+- [ ] Bug fixes and polish
 
 **Tech Stack:**
-- Frontend: React + Vite + TypeScript + TailwindCSS
-- Backend: Express + MongoDB + JWT auth
-- Storage: Cloudflare R2
-- Deployment: Vercel (frontend) + Railway (backend)
+- **Full-Stack:** Next.js 14 + TypeScript
+- **Database:** MongoDB Atlas
+- **Cache:** Redis (Upstash)
+- **Storage:** Cloudflare R2
+- **AI:** OpenAI GPT-4
+- **Payments:** Stripe
+- **Deployment:** Vercel (single app)
 
-**NOT in Phase 1:**
-- ❌ AI matching (manual assignment)
-- ❌ Subscriptions (start with pay-per-job)
-- ❌ Real-time messaging (basic async)
+**Launch Criteria:**
+- ✅ 5 clients onboarded and actively using
+- ✅ All 15 core workers trained on platform
+- ✅ AI job analysis working reliably
+- ✅ File uploads/downloads working
+- ✅ Payments processing correctly
+- ✅ Manual job assignment smooth
+
+**Explicitly NOT in Phase 1:**
+- ❌ AI worker matching (admin assigns manually)
+- ❌ Subscriptions (start pay-per-job, add later)
+- ❌ Real-time messaging (async is fine)
 - ❌ Worker time tracking
+- ❌ Quality pre-checks
 - ❌ Advanced analytics
 
 ---
 
-### Phase 2: Automation (Weeks 7-12)
+### Phase 2: AI & Automation (Weeks 7-12)
 
-**Goal:** Automate job matching and add subscriptions
+**Goal:** Add AI matching, subscriptions, and quality features
+
+**Success Metrics:**
+- 20+ active clients
+- $10K+ MRR
+- 80%+ AI matching accuracy
+- <24hr avg job assignment time
 
 **Features:**
-- ✅ AI-powered job matching
-- ✅ Subscription tiers with credits
-- ✅ Worker availability management
-- ✅ Smart job queue
-- ✅ Real-time notifications (Socket.io)
-- ✅ Email notifications
-- ✅ Improved file management
-- ✅ Worker performance tracking
-- ✅ Client dashboard with analytics
+- [ ] AI worker matching algorithm ✨
+- [ ] Subscription tiers with credits
+- [ ] Quality pre-check for deliverables ✨
+- [ ] Communication assistant (message enhancement) ✨
+- [ ] Real-time notifications
+- [ ] Worker capacity dashboard
+- [ ] Client metrics dashboard
+- [ ] Worker performance tracking
+- [ ] Preferred worker system
+- [ ] Flex worker management (hire first flex workers)
 
-**Enhancements:**
-- Better admin dashboard (capacity, metrics)
-- Worker portfolio showcase
-- Client preferred workers
-- Job templates
+**Business Focus:**
+- Prove AI matching works better than manual
+- Convert clients from pay-per-job to subscriptions
+- Begin hiring flex workers as needed
 
 ---
 
-### Phase 3: Scale (Months 4-6)
+### Phase 3: Scale & Intelligence (Months 4-6)
 
-**Goal:** Handle 100+ active clients, optimize operations
+**Goal:** Achieve exit-ready metrics and intelligent automation
+
+**Success Metrics:**
+- 50+ active clients
+- $25K+ MRR
+- 25+ workers (core + flex)
+- Acquisition-ready (strong unit economics)
 
 **Features:**
-- ✅ Real-time messaging with typing indicators
-- ✅ Time tracking for workers
-- ✅ Advanced analytics (clients, workers, admins)
-- ✅ Referral system
-- ✅ Agency white-label support
-- ✅ Mobile-responsive optimization
-- ✅ API rate limiting and optimization
-- ✅ Advanced search and filters
-- ✅ Quality assurance workflows
+- [ ] Capacity forecasting (AI predictions) ✨
+- [ ] Hiring triggers and recommendations ✨
+- [ ] Client health scoring (churn prediction) ✨
+- [ ] Advanced analytics
+- [ ] Real-time messaging (if needed)
+- [ ] Worker time tracking
+- [ ] White-label capability (for acquisition appeal)
+- [ ] API for integrations (if acquirer wants it)
 
-**Infrastructure:**
-- Database optimization (indexes, queries)
-- Caching layer (Redis)
-- CDN optimization
-- Background job processing (Bull)
-- Performance monitoring
+**Business Focus:**
+- Optimize unit economics for acquisition
+- Build metrics dashboard that shows growth
+- Prepare for acquisition conversations
+- Scale quality without scaling headcount (AI does heavy lifting)
+
+**What Makes You Attractive to Acquirers:**
+- Defensible worker supply (curated, trained team)
+- AI differentiation (not just human VAs)
+- Strong unit economics (clear margin structure)
+- Proven demand (MRR growth, retention rates)
+- Scalable operations (AI reduces overhead)
 
 ---
 
-### Phase 4: Growth (Months 6-12)
+### Phase 4: Exit Strategy (Months 6-12)
 
-**Goal:** Scale to 500+ clients, expand features
+**Goal:** Scale to acquisition target or beyond
 
-**Features:**
-- ✅ Mobile apps (React Native or PWA)
-- ✅ Advanced AI features (quality checking)
-- ✅ Video processing automation
-- ✅ Team collaboration features
-- ✅ API for third-party integrations
-- ✅ Advanced reporting
-- ✅ Worker certification program
-- ✅ Client training resources
+**Target Metrics:**
+- $50K+ MRR ($600K ARR)
+- 100+ active clients
+- 50+ workers
+- 90%+ customer retention
+- Clear path to $1M+ ARR
 
-**Business:**
-- Expand service offerings
-- Geographic expansion
-- Partnership integrations
-- Marketing automation
+**Potential Acquirers:**
+- Upwork/Fiverr (add curated tier)
+- SE Asian super-apps (Grab, Gojek)
+- Global VA services (Time Doctor, Belay)
+- AI companies (Jasper, Copy.ai - want human fallback)
+
+**Valuation Targets:**
+- Conservative: 3-5x ARR = $1.8M - $3M
+- Optimistic: 8-10x ARR = $4.8M - $6M
+
+**Business Focus:**
+- Maximize MRR and retention
+- Document all processes
+- Build white-label capability
+- Prepare for due diligence
+- Negotiate from position of strength
 
 ---
 

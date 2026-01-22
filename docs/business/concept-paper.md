@@ -15,7 +15,7 @@
 
 **Target:** $15K MRR within 4 months, 50 active clients, path to $50K+ MRR within 12 months.
 
-**Investment Needed:** $15-25K for legal setup, platform development, initial marketing (can bootstrap with manual operations to reduce).
+No investment needed. We have the team and the clients. We just need to build the platform. We will start with network of friends and family to get the ball rolling. 
 
 ---
 
