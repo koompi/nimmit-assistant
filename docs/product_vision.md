@@ -12,9 +12,9 @@ Instead of a standard SaaS dashboard, we build a **Mission Control Center**.
     *   *Indicator:* "🟢 Bora (Editor) is Online"
     *   *Indicator:* "⚡ Nimmit Pool: Active"
 
-## 2. The Workflow: Front Desk ➔ Production Floor
+## 2. The Workflow: Intake ➔ Production
 
-### Step 1: The Briefing Room (AI Intake)
+### Step 1: The Briefing (AI Intake)
 *   **The Interface:** A focused, high-end chat interface (Voice & Text).
 *   **The Persona:** "Nimmit" - Efficient, smart, strategic.
 *   **The Interaction:**
@@ -27,7 +27,7 @@ Instead of a standard SaaS dashboard, we build a **Mission Control Center**.
 *   *Why:* This visualizes the "Human in the Loop" safety net. It's the Nimmit Standard.
 
 ### Step 3: Production (The Pool)
-*   **Visibility:** The user sees the ticket move into the **"Active Floor"**.
+*   **Visibility:** The user sees the ticket move into the **"Active Queue"**.
 *   **Real-Time Status:** "Rendering", "Quality Check", "Final Polish".
 *   **Transparency:** They don't pick the specific worker (Nimmit manages that), but they see the *progress*.
 
