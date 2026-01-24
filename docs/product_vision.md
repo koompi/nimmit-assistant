@@ -35,4 +35,4 @@ Instead of a standard SaaS dashboard, we build a **Mission Control Center**.
 
 1.  **Transparency:** **Show the Human.** Clients will see "Bora is editing," not just "Video Pool." This builds the relationship while Nimmit ensures the standard.
 2.  **Interaction Style:** **Chat-First (WhatsApp Style).** Nimmit acts as the conversational partner, guiding the client from a vague idea to a clear spec across the chat.
-3.  **The Vibe:** **No Building Metaphors.** Keep it abstract. Focus on the *result* and the *person* doing the work, not a map of a factory.
+3.  **The Vibe:** **No Building Metaphors.** Keep it abstract. Focus on the *result* and the *person* doing the work, not a map of a physical office.
