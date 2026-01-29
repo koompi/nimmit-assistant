@@ -143,7 +143,7 @@
   - Status color coding (warm palette)
   - Empty state illustration
 
-- [ ] **DESIGN-013**: Job detail page
+- [x] **DESIGN-013**: Job detail page
   - File: `src/app/client/jobs/[id]/page.tsx`
   - Chat-style message thread
   - File attachment previews
@@ -164,7 +164,7 @@
 
 ### Phase 5: Worker Portal (Priority: P1)
 
-- [ ] **DESIGN-016**: Worker dashboard
+- [x] **DESIGN-016**: Worker dashboard
   - File: `src/app/worker/dashboard/page.tsx`
   - Availability toggle (prominent)
   - Assigned jobs queue
@@ -186,7 +186,7 @@
 
 ### Phase 6: Admin Portal (Priority: P1)
 
-- [ ] **DESIGN-019**: Admin dashboard
+- [x] **DESIGN-019**: Admin dashboard
   - File: `src/app/admin/dashboard/page.tsx`
   - Key metrics overview
   - Pending assignments queue
