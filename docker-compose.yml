@@ -29,6 +29,22 @@ services:
       - clamav-data:/var/lib/clamav
     restart: unless-stopped
 
+  # Worker service for production
+  # Uncomment and build Dockerfile.worker when deploying to production
+  # worker:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.worker
+  #   container_name: nimmit-worker
+  #   depends_on:
+  #     - mongodb
+  #     - redis
+  #   environment:
+  #     - NODE_ENV=production
+  #     - REDIS_URL=redis://redis:6379
+  #     - MONGODB_URI=mongodb://mongodb:27017/nimmit
+  #   restart: unless-stopped
+
 volumes:
   mongo-data:
   redis-data:

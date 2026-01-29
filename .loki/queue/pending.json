@@ -1,0 +1,84 @@
+{
+  "tasks": [
+    {
+      "id": "task-001",
+      "type": "implementation",
+      "title": "Set up Redis connection module",
+      "priority": 1,
+      "status": "pending",
+      "phase": "foundation"
+    },
+    {
+      "id": "task-002",
+      "type": "implementation",
+      "title": "Create queue configuration and types",
+      "priority": 2,
+      "status": "pending",
+      "phase": "foundation"
+    },
+    {
+      "id": "task-003",
+      "type": "implementation",
+      "title": "Implement job analysis processor",
+      "priority": 3,
+      "status": "pending",
+      "phase": "processors"
+    },
+    {
+      "id": "task-004",
+      "type": "implementation",
+      "title": "Implement auto-assign processor",
+      "priority": 4,
+      "status": "pending",
+      "phase": "processors"
+    },
+    {
+      "id": "task-005",
+      "type": "implementation",
+      "title": "Implement notification processor",
+      "priority": 5,
+      "status": "pending",
+      "phase": "processors"
+    },
+    {
+      "id": "task-006",
+      "type": "implementation",
+      "title": "Create worker entry point",
+      "priority": 6,
+      "status": "pending",
+      "phase": "worker"
+    },
+    {
+      "id": "task-007",
+      "type": "integration",
+      "title": "Update API routes to use queues",
+      "priority": 7,
+      "status": "pending",
+      "phase": "integration"
+    },
+    {
+      "id": "task-008",
+      "type": "infrastructure",
+      "title": "Add worker scripts and docker-compose config",
+      "priority": 8,
+      "status": "pending",
+      "phase": "integration"
+    },
+    {
+      "id": "task-009",
+      "type": "testing",
+      "title": "Write unit tests for queue processors",
+      "priority": 9,
+      "status": "pending",
+      "phase": "testing"
+    },
+    {
+      "id": "task-010",
+      "type": "testing",
+      "title": "Integration testing and verification",
+      "priority": 10,
+      "status": "pending",
+      "phase": "testing"
+    }
+  ]
+}

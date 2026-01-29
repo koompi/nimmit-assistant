@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db/connection";
 import { Job, User } from "@/lib/db/models";
 import { createJobSchema } from "@/lib/validations/job";
+import { addJobAnalysisJob } from "@/lib/queue";
 
 // GET /api/jobs - List jobs based on user role
 export async function GET(request: Request) {
@@ -119,7 +120,8 @@ export async function POST(request: Request) {
 
     await connectDB();
 
-    // Create the job
+    // Create the job immediately with "pending" status
+    // AI analysis and auto-assignment will be processed asynchronously by workers
     const job = await Job.create({
       clientId: session.user.id,
       ...parsed.data,
@@ -131,13 +133,32 @@ export async function POST(request: Request) {
       $inc: { "clientProfile.totalJobs": 1 },
     });
 
+    // Queue job analysis (non-blocking, processed by worker)
+    try {
+      await addJobAnalysisJob({
+        jobId: job._id.toString(),
+        title: parsed.data.title,
+        description: parsed.data.description,
+        category: parsed.data.category,
+        clientId: session.user.id,
+      });
+    } catch (queueError) {
+      console.error("Failed to queue job analysis:", queueError);
+      // Job is still created, analysis can be triggered manually
+    }
+
+    // Fetch the job with populated references
+    const createdJob = await Job.findById(job._id)
+      .populate("clientId", "profile.firstName profile.lastName email")
+      .lean();
+
     return NextResponse.json(
       {
         success: true,
-        data: job,
-        message: "Job created successfully",
+        data: createdJob,
+        message: "Job created and queued for analysis",
       },
-      { status: 201 }
+      { status: 202 } // 202 Accepted - async processing
     );
   } catch (error) {
     console.error("Create job error:", error);
