@@ -1,5 +1,25 @@
 import { Job } from "bullmq";
+import { Resend } from "resend";
 import type { NotificationJobData, NotificationType } from "../types";
+
+// ===========================================
+// Resend Client
+// ===========================================
+
+const EMAIL_API_KEY = process.env.EMAIL_API_KEY;
+const EMAIL_FROM = process.env.EMAIL_FROM || "Nimmit <notifications@nimmit.com>";
+
+// Initialize Resend client (lazy - only when API key is available)
+let resend: Resend | null = null;
+function getResendClient(): Resend | null {
+  if (!EMAIL_API_KEY) {
+    return null;
+  }
+  if (!resend) {
+    resend = new Resend(EMAIL_API_KEY);
+  }
+  return resend;
+}
 
 // ===========================================
 // Email Templates
@@ -102,10 +122,9 @@ function getEmailTemplate(type: NotificationType, data: NotificationJobData["dat
 }
 
 /**
- * Process notification - Send email notification to user
+ * Process notification - Send email notification to user via Resend
  *
- * Note: This is a placeholder implementation. In production, integrate with
- * an email service like Resend, SendGrid, or AWS SES.
+ * If EMAIL_API_KEY is not configured, logs the email instead of sending.
  */
 export async function processNotification(job: Job<NotificationJobData>) {
   const { userId, email, type, data } = job.data;
@@ -116,28 +135,38 @@ export async function processNotification(job: Job<NotificationJobData>) {
     // Get email template
     const template = getEmailTemplate(type, data);
 
-    // TODO: Integrate with email service (Resend, SendGrid, AWS SES, etc.)
-    // For now, just log the email content
-    console.log(`[Notification] Email would be sent to ${email}`);
-    console.log(`[Notification] Subject: ${template.subject}`);
-    console.log(`[Notification] HTML length: ${template.html.length} characters`);
+    const client = getResendClient();
 
-    // Example with Resend (when implemented):
-    // import { Resend } from "resend";
-    // const resend = new Resend(process.env.RESEND_API_KEY);
-    // await resend.emails.send({
-    //   from: "Nimmit <notifications@nimmit.com>",
-    //   to: email,
-    //   subject: template.subject,
-    //   html: template.html,
-    // });
+    if (client) {
+      // Send email via Resend
+      const result = await client.emails.send({
+        from: EMAIL_FROM,
+        to: email,
+        subject: template.subject,
+        html: template.html,
+      });
 
-    console.log(`[Notification] ${type} notification sent successfully`);
+      if (result.error) {
+        console.error(`[Notification] Resend error:`, result.error);
+        throw new Error(`Resend error: ${result.error.message}`);
+      }
+
+      console.log(`[Notification] Email sent to ${email}, ID: ${result.data?.id}`);
+    } else {
+      // No API key configured - log instead
+      console.log(`[Notification] EMAIL_API_KEY not configured, logging email:`);
+      console.log(`[Notification] To: ${email}`);
+      console.log(`[Notification] Subject: ${template.subject}`);
+      console.log(`[Notification] HTML length: ${template.html.length} characters`);
+    }
+
+    console.log(`[Notification] ${type} notification processed successfully`);
 
     return {
       success: true,
       email,
       type,
+      sent: !!client,
     };
   } catch (error) {
     console.error(`[Notification] Error processing ${type} notification for ${email}:`, error);
