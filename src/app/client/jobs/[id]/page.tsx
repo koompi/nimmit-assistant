@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { FileList } from "@/components/job/file-list";
+import { useJobPolling } from "@/hooks/useJobPolling";
 import type { Job, JobMessage } from "@/types";
 
 interface JobWithPopulated extends Omit<Job, "workerId" | "messages"> {
@@ -40,12 +41,45 @@ type CompleteJobInput = z.infer<typeof completeJobSchema>;
 export default function ClientJobDetailPage() {
     const params = useParams();
     const router = useRouter();
-    const [job, setJob] = useState<JobWithPopulated | null>(null);
-    const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState("");
-    const [error, setError] = useState<string | null>(null);
     const [completing, setCompleting] = useState(false);
     const [showRating, setShowRating] = useState(false);
+    const [previousStatus, setPreviousStatus] = useState<string | null>(null);
+
+    // Use polling hook for auto-updates
+    const {
+        job,
+        isLoading: loading,
+        error,
+        refetch,
+    } = useJobPolling({
+        jobId: params.id as string,
+        interval: 5000, // Poll every 5 seconds
+        onUpdate: useCallback((updatedJob: { status: string }) => {
+            // Show toast when status changes
+            if (previousStatus && previousStatus !== updatedJob.status) {
+                const statusMessages: Record<string, string> = {
+                    assigned: "Your task has been assigned to an assistant!",
+                    in_progress: "Your assistant has started working on your task",
+                    review: "Your task is ready for review!",
+                    completed: "Task completed!",
+                    revision: "Revision in progress",
+                };
+                const msg = statusMessages[updatedJob.status];
+                if (msg) {
+                    toast.success(msg);
+                }
+            }
+            setPreviousStatus(updatedJob.status);
+        }, [previousStatus]),
+    });
+
+    // Update previous status on initial load
+    useEffect(() => {
+        if (job && !previousStatus) {
+            setPreviousStatus(job.status);
+        }
+    }, [job, previousStatus]);
 
     const {
         register,
@@ -59,27 +93,8 @@ export default function ClientJobDetailPage() {
 
     const selectedRating = watch("rating");
 
-    useEffect(() => {
-        async function fetchJob() {
-            try {
-                const response = await fetch(`/api/jobs/${params.id}`);
-                const data = await response.json();
-                if (data.success) {
-                    setJob(data.data);
-                } else {
-                    setError(data.error?.message || "Failed to load job");
-                }
-            } catch (err) {
-                console.error("Failed to fetch job:", err);
-                setError("Failed to load job");
-            } finally {
-                setLoading(false);
-            }
-        }
-        if (params.id) {
-            fetchJob();
-        }
-    }, [params.id]);
+    // Cast job to the expected type with populated fields
+    const typedJob = job as JobWithPopulated | null;
 
     const sendMessage = async () => {
         if (!message.trim()) return;
@@ -96,7 +111,7 @@ export default function ClientJobDetailPage() {
 
             const data = await response.json();
             if (data.success) {
-                setJob(data.data);
+                await refetch();
                 setMessage("");
                 toast.success("Message sent");
             } else {
@@ -137,12 +152,7 @@ export default function ClientJobDetailPage() {
 
             const data = await response.json();
             if (data.success) {
-                // Refresh job
-                const refreshRes = await fetch(`/api/jobs/${params.id}`);
-                const refreshData = await refreshRes.json();
-                if (refreshData.success) {
-                    setJob(refreshData.data);
-                }
+                await refetch();
                 setMessage("");
                 toast.success("Revision requested");
             } else {
@@ -169,7 +179,7 @@ export default function ClientJobDetailPage() {
 
             const result = await response.json();
             if (result.success) {
-                setJob(result.data);
+                await refetch();
                 setShowRating(false);
                 toast.success("Job completed! Thank you for your feedback.");
             } else {
@@ -212,7 +222,7 @@ export default function ClientJobDetailPage() {
         );
     }
 
-    if (error || !job) {
+    if (error || !typedJob) {
         return (
             <div className="max-w-2xl mx-auto py-12">
                 <Alert variant="destructive">
@@ -238,21 +248,21 @@ export default function ClientJobDetailPage() {
                     >
                         ← Back to Tasks
                     </Button>
-                    <h1 className="text-3xl font-bold">{job.title}</h1>
-                    {job.workerId && (
+                    <h1 className="text-3xl font-bold">{typedJob.title}</h1>
+                    {typedJob.workerId && (
                         <p className="text-muted-foreground mt-1">
-                            Assigned to {job.workerId.profile.firstName}{" "}
-                            {job.workerId.profile.lastName}
+                            Assigned to {typedJob.workerId.profile.firstName}{" "}
+                            {typedJob.workerId.profile.lastName}
                         </p>
                     )}
                 </div>
                 <div className="flex items-center gap-2">
-                    {job.priority !== "standard" && (
-                        <Badge variant={job.priority === "rush" ? "destructive" : "default"}>
-                            {job.priority}
+                    {typedJob.priority !== "standard" && (
+                        <Badge variant={typedJob.priority === "rush" ? "destructive" : "default"}>
+                            {typedJob.priority}
                         </Badge>
                     )}
-                    <StatusBadge status={job.status} />
+                    <StatusBadge status={typedJob.status} />
                 </div>
             </div>
 
@@ -265,12 +275,12 @@ export default function ClientJobDetailPage() {
                             <CardTitle>Task Description</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="whitespace-pre-wrap">{job.description}</p>
+                            <p className="whitespace-pre-wrap">{typedJob.description}</p>
                         </CardContent>
                     </Card>
 
                     {/* Review Actions */}
-                    {job.status === "review" && !showRating && (
+                    {typedJob.status === "review" && !showRating && (
                         <Card className="border-green-500">
                             <CardHeader>
                                 <CardTitle>Ready for Review!</CardTitle>
@@ -366,25 +376,25 @@ export default function ClientJobDetailPage() {
                     )}
 
                     {/* Completed Job Info */}
-                    {job.status === "completed" && (
+                    {typedJob.status === "completed" && (
                         <Card className="border-green-500 bg-green-50">
                             <CardHeader>
                                 <CardTitle className="text-green-800">Task Completed!</CardTitle>
                                 <CardDescription>
-                                    Completed on {new Date(job.completedAt!).toLocaleDateString()}
+                                    Completed on {new Date(typedJob.completedAt!).toLocaleDateString()}
                                 </CardDescription>
                             </CardHeader>
-                            {job.rating && (
+                            {typedJob.rating && (
                                 <CardContent>
                                     <div className="flex items-center gap-2">
                                         <span className="text-sm text-muted-foreground">Your rating:</span>
                                         <span className="text-yellow-400 text-xl">
-                                            {"★".repeat(job.rating)}{"☆".repeat(5 - job.rating)}
+                                            {"★".repeat(typedJob.rating)}{"☆".repeat(5 - typedJob.rating)}
                                         </span>
                                     </div>
-                                    {job.feedback && (
+                                    {typedJob.feedback && (
                                         <p className="mt-2 text-sm text-muted-foreground">
-                                            &ldquo;{job.feedback}&rdquo;
+                                            &ldquo;{typedJob.feedback}&rdquo;
                                         </p>
                                     )}
                                 </CardContent>
@@ -393,22 +403,22 @@ export default function ClientJobDetailPage() {
                     )}
 
                     {/* Files & Deliverables */}
-                    {(job.files.length > 0 || job.deliverables.length > 0) && (
+                    {(typedJob.files.length > 0 || typedJob.deliverables.length > 0) && (
                         <Card>
                             <CardHeader>
                                 <CardTitle>Files</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-6">
-                                {job.files.length > 0 && (
+                                {typedJob.files.length > 0 && (
                                     <FileList
-                                        files={job.files}
+                                        files={typedJob.files}
                                         title="Reference Files"
                                         emptyMessage="No reference files"
                                     />
                                 )}
-                                {job.deliverables.length > 0 && (
+                                {typedJob.deliverables.length > 0 && (
                                     <FileList
-                                        files={job.deliverables}
+                                        files={typedJob.deliverables}
                                         title="Deliverables"
                                         emptyMessage="No deliverables yet"
                                     />
@@ -424,13 +434,13 @@ export default function ClientJobDetailPage() {
                             <CardDescription>Communication with your assistant</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            {job.messages.length === 0 ? (
+                            {typedJob.messages.length === 0 ? (
                                 <p className="text-muted-foreground text-center py-4">
                                     No messages yet
                                 </p>
                             ) : (
                                 <div className="space-y-4 max-h-80 overflow-y-auto">
-                                    {job.messages.map((msg) => (
+                                    {typedJob.messages.map((msg) => (
                                         <div
                                             key={msg.id}
                                             className={`p-3 rounded-lg ${msg.senderRole === "client"
@@ -450,9 +460,9 @@ export default function ClientJobDetailPage() {
                                 </div>
                             )}
 
-                            {job.status !== "completed" &&
-                                job.status !== "cancelled" &&
-                                job.status !== "pending" && (
+                            {typedJob.status !== "completed" &&
+                                typedJob.status !== "cancelled" &&
+                                typedJob.status !== "pending" && (
                                     <div className="flex gap-2 pt-4 border-t">
                                         <Textarea
                                             placeholder="Type a message..."
@@ -479,63 +489,63 @@ export default function ClientJobDetailPage() {
                         <CardContent className="space-y-4">
                             <div>
                                 <p className="text-sm text-muted-foreground">Category</p>
-                                <p className="font-medium capitalize">{job.category}</p>
+                                <p className="font-medium capitalize">{typedJob.category}</p>
                             </div>
                             <div>
                                 <p className="text-sm text-muted-foreground">Created</p>
                                 <p className="font-medium">
-                                    {new Date(job.createdAt).toLocaleDateString()}
+                                    {new Date(typedJob.createdAt).toLocaleDateString()}
                                 </p>
                             </div>
-                            {job.assignedAt && (
+                            {typedJob.assignedAt && (
                                 <div>
                                     <p className="text-sm text-muted-foreground">Assigned</p>
                                     <p className="font-medium">
-                                        {new Date(job.assignedAt).toLocaleDateString()}
+                                        {new Date(typedJob.assignedAt).toLocaleDateString()}
                                     </p>
                                 </div>
                             )}
-                            {job.startedAt && (
+                            {typedJob.startedAt && (
                                 <div>
                                     <p className="text-sm text-muted-foreground">Started</p>
                                     <p className="font-medium">
-                                        {new Date(job.startedAt).toLocaleDateString()}
+                                        {new Date(typedJob.startedAt).toLocaleDateString()}
                                     </p>
                                 </div>
                             )}
-                            {job.completedAt && (
+                            {typedJob.completedAt && (
                                 <div>
                                     <p className="text-sm text-muted-foreground">Completed</p>
                                     <p className="font-medium">
-                                        {new Date(job.completedAt).toLocaleDateString()}
+                                        {new Date(typedJob.completedAt).toLocaleDateString()}
                                     </p>
                                 </div>
                             )}
-                            {job.estimatedHours && (
+                            {typedJob.estimatedHours && (
                                 <div>
                                     <p className="text-sm text-muted-foreground">Estimated Hours</p>
-                                    <p className="font-medium">{job.estimatedHours} hours</p>
+                                    <p className="font-medium">{typedJob.estimatedHours} hours</p>
                                 </div>
                             )}
                         </CardContent>
                     </Card>
 
                     {/* Assistant Info */}
-                    {job.workerId && (
+                    {typedJob.workerId && (
                         <Card>
                             <CardHeader>
                                 <CardTitle>Your Assistant</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <p className="font-medium">
-                                    {job.workerId.profile.firstName} {job.workerId.profile.lastName}
+                                    {typedJob.workerId.profile.firstName} {typedJob.workerId.profile.lastName}
                                 </p>
                             </CardContent>
                         </Card>
                     )}
 
                     {/* Cancel Option */}
-                    {(job.status === "pending" || job.status === "assigned") && (
+                    {(typedJob.status === "pending" || typedJob.status === "assigned") && (
                         <Card>
                             <CardHeader>
                                 <CardTitle>Actions</CardTitle>
