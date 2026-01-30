@@ -1,84 +1,36 @@
 {
   "tasks": [
     {
-      "id": "task-001",
-      "type": "implementation",
-      "title": "Set up Redis connection module",
+      "id": "redesign-worker-job-detail",
       "priority": 1,
-      "status": "pending",
-      "phase": "foundation"
+      "type": "frontend",
+      "file": "src/app/worker/jobs/[id]/page.tsx",
+      "description": "Redesign worker job detail page with warm Nimmit aesthetic",
+      "status": "pending"
     },
     {
-      "id": "task-002",
-      "type": "implementation",
-      "title": "Create queue configuration and types",
+      "id": "redesign-admin-job-detail",
       "priority": 2,
-      "status": "pending",
-      "phase": "foundation"
+      "type": "frontend",
+      "file": "src/app/admin/jobs/[id]/page.tsx",
+      "description": "Redesign admin job detail page with assignment controls",
+      "status": "pending"
     },
     {
-      "id": "task-003",
-      "type": "implementation",
-      "title": "Implement job analysis processor",
+      "id": "redesign-client-billing",
       "priority": 3,
-      "status": "pending",
-      "phase": "processors"
+      "type": "frontend",
+      "file": "src/app/client/billing/page.tsx",
+      "description": "Redesign client billing/subscription page",
+      "status": "pending"
     },
     {
-      "id": "task-004",
-      "type": "implementation",
-      "title": "Implement auto-assign processor",
+      "id": "redesign-client-new-job",
       "priority": 4,
-      "status": "pending",
-      "phase": "processors"
-    },
-    {
-      "id": "task-005",
-      "type": "implementation",
-      "title": "Implement notification processor",
-      "priority": 5,
-      "status": "pending",
-      "phase": "processors"
-    },
-    {
-      "id": "task-006",
-      "type": "implementation",
-      "title": "Create worker entry point",
-      "priority": 6,
-      "status": "pending",
-      "phase": "worker"
-    },
-    {
-      "id": "task-007",
-      "type": "integration",
-      "title": "Update API routes to use queues",
-      "priority": 7,
-      "status": "pending",
-      "phase": "integration"
-    },
-    {
-      "id": "task-008",
-      "type": "infrastructure",
-      "title": "Add worker scripts and docker-compose config",
-      "priority": 8,
-      "status": "pending",
-      "phase": "integration"
-    },
-    {
-      "id": "task-009",
-      "type": "testing",
-      "title": "Write unit tests for queue processors",
-      "priority": 9,
-      "status": "pending",
-      "phase": "testing"
-    },
-    {
-      "id": "task-010",
-      "type": "testing",
-      "title": "Integration testing and verification",
-      "priority": 10,
-      "status": "pending",
-      "phase": "testing"
+      "type": "frontend",
+      "file": "src/app/client/jobs/new/page.tsx",
+      "description": "Redesign new job creation form",
+      "status": "pending"
     }
   ]
 }

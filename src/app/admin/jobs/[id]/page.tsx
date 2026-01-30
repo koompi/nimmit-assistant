@@ -2,41 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import type { Job, JobMessage } from "@/types";
 import type { IUser } from "@/lib/db/models";
 
 interface JobWithPopulated extends Omit<Job, "clientId" | "workerId" | "messages"> {
-    clientId: {
-        _id: string;
-        profile: { firstName: string; lastName: string };
-        email: string;
-    };
-    workerId?: {
-        _id: string;
-        profile: { firstName: string; lastName: string };
-        email: string;
-    };
+    clientId: { _id: string; profile: { firstName: string; lastName: string }; email: string };
+    workerId?: { _id: string; profile: { firstName: string; lastName: string }; email: string };
     messages: Array<JobMessage & { senderRole: string }>;
 }
 
@@ -55,70 +35,39 @@ export default function AdminJobDetailPage() {
     useEffect(() => {
         async function fetchData() {
             try {
-                const [jobRes, workersRes] = await Promise.all([
-                    fetch(`/api/jobs/${params.id}`),
-                    fetch("/api/users?role=worker"),
-                ]);
-
-                const [jobData, workersData] = await Promise.all([
-                    jobRes.json(),
-                    workersRes.json(),
-                ]);
-
-                if (jobData.success) {
-                    setJob(jobData.data);
-                } else {
-                    setError(jobData.error?.message || "Failed to load job");
-                }
-
-                if (workersData.success) {
-                    setWorkers(workersData.data);
-                }
-            } catch (err) {
-                console.error("Failed to fetch data:", err);
+                const [jobRes, workersRes] = await Promise.all([fetch(`/api/jobs/${params.id}`), fetch("/api/users?role=worker")]);
+                const [jobData, workersData] = await Promise.all([jobRes.json(), workersRes.json()]);
+                if (jobData.success) setJob(jobData.data);
+                else setError(jobData.error?.message || "Failed to load job");
+                if (workersData.success) setWorkers(workersData.data);
+            } catch {
                 setError("Failed to load data");
             } finally {
                 setLoading(false);
             }
         }
-        if (params.id) {
-            fetchData();
-        }
+        if (params.id) fetchData();
     }, [params.id]);
 
     const assignJob = async () => {
-        if (!selectedWorkerId) {
-            toast.error("Please select a worker");
-            return;
-        }
-
+        if (!selectedWorkerId) { toast.error("Please select a worker"); return; }
         setAssigning(true);
         try {
             const response = await fetch(`/api/jobs/${params.id}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    action: "assign",
-                    workerId: selectedWorkerId,
-                    estimatedHours: estimatedHours ? parseFloat(estimatedHours) : undefined,
-                }),
+                body: JSON.stringify({ action: "assign", workerId: selectedWorkerId, estimatedHours: estimatedHours ? parseFloat(estimatedHours) : undefined }),
             });
-
             const data = await response.json();
             if (data.success) {
-                setJob(data.data);
                 toast.success("Job assigned successfully");
-                // Refresh to get populated worker data
                 const refreshRes = await fetch(`/api/jobs/${params.id}`);
                 const refreshData = await refreshRes.json();
-                if (refreshData.success) {
-                    setJob(refreshData.data);
-                }
+                if (refreshData.success) setJob(refreshData.data);
             } else {
                 toast.error(data.error?.message || "Failed to assign job");
             }
-        } catch (err) {
-            console.error("Failed to assign job:", err);
+        } catch {
             toast.error("Failed to assign job");
         } finally {
             setAssigning(false);
@@ -127,17 +76,12 @@ export default function AdminJobDetailPage() {
 
     const sendMessage = async () => {
         if (!message.trim()) return;
-
         try {
             const response = await fetch(`/api/jobs/${params.id}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    action: "addMessage",
-                    message: message.trim(),
-                }),
+                body: JSON.stringify({ action: "addMessage", message: message.trim() }),
             });
-
             const data = await response.json();
             if (data.success) {
                 setJob(data.data);
@@ -146,20 +90,15 @@ export default function AdminJobDetailPage() {
             } else {
                 toast.error(data.error?.message || "Failed to send message");
             }
-        } catch (err) {
-            console.error("Failed to send message:", err);
+        } catch {
             toast.error("Failed to send message");
         }
     };
 
     const cancelJob = async () => {
         if (!confirm("Are you sure you want to cancel this job?")) return;
-
         try {
-            const response = await fetch(`/api/jobs/${params.id}`, {
-                method: "DELETE",
-            });
-
+            const response = await fetch(`/api/jobs/${params.id}`, { method: "DELETE" });
             const data = await response.json();
             if (data.success) {
                 toast.success("Job cancelled");
@@ -167,324 +106,250 @@ export default function AdminJobDetailPage() {
             } else {
                 toast.error(data.error?.message || "Failed to cancel job");
             }
-        } catch (err) {
-            console.error("Failed to cancel job:", err);
+        } catch {
             toast.error("Failed to cancel job");
         }
     };
 
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center py-12">
-                <p className="text-muted-foreground">Loading...</p>
-            </div>
-        );
-    }
+    if (loading) return <LoadingSkeleton />;
 
     if (error || !job) {
         return (
-            <div className="max-w-2xl mx-auto py-12">
-                <Alert variant="destructive">
-                    <AlertDescription>{error || "Job not found"}</AlertDescription>
-                </Alert>
-                <Button variant="outline" className="mt-4" onClick={() => router.back()}>
-                    Go Back
-                </Button>
+            <div className="min-h-screen bg-[var(--nimmit-bg-primary)] flex items-center justify-center p-6">
+                <div className="max-w-md text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[var(--nimmit-error-bg)] flex items-center justify-center">
+                        <svg className="w-8 h-8 text-[var(--nimmit-error)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                    </div>
+                    <h2 className="text-xl font-display font-semibold text-[var(--nimmit-text-primary)] mb-2">{error || "Job not found"}</h2>
+                    <Button variant="outline" onClick={() => router.back()} className="border-[var(--nimmit-border)]">Go Back</Button>
+                </div>
             </div>
         );
     }
 
-    const availableWorkers = workers.filter(
-        (w) =>
-            w.workerProfile?.availability !== "offline" &&
-            (w.workerProfile?.currentJobCount || 0) <
-            (w.workerProfile?.maxConcurrentJobs || 3)
-    );
+    const availableWorkers = workers.filter((w) => w.workerProfile?.availability !== "offline" && (w.workerProfile?.currentJobCount || 0) < (w.workerProfile?.maxConcurrentJobs || 3));
+    const isPending = job.status === "pending";
+    const canMessage = !["completed", "cancelled"].includes(job.status);
 
     return (
-        <div className="max-w-4xl mx-auto space-y-6">
-            {/* Header */}
-            <div className="flex items-start justify-between">
-                <div>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="mb-2"
-                        onClick={() => router.back()}
-                    >
-                        ← Back to Jobs
-                    </Button>
-                    <h1 className="text-3xl font-bold">{job.title}</h1>
-                    <p className="text-muted-foreground mt-1">
-                        From {job.clientId.profile.firstName} {job.clientId.profile.lastName}
-                    </p>
+        <div className="min-h-screen bg-[var(--nimmit-bg-primary)]">
+            <div className="max-w-6xl mx-auto px-6 py-10 space-y-8">
+                {/* Header */}
+                <div className="animate-fade-up">
+                    <Link href="/admin/jobs" className="inline-flex items-center gap-1 text-sm text-[var(--nimmit-text-secondary)] hover:text-[var(--nimmit-accent-primary)] mb-4 transition-colors">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                        Back to Jobs
+                    </Link>
+                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                        <div>
+                            <div className="flex items-center gap-3 mb-2">
+                                {job.priority !== "standard" && <PriorityBadge priority={job.priority} />}
+                                <StatusBadge status={job.status} />
+                            </div>
+                            <h1 className="text-2xl md:text-3xl font-display font-semibold text-[var(--nimmit-text-primary)]">{job.title}</h1>
+                            <p className="text-[var(--nimmit-text-secondary)] mt-1">From <span className="font-medium text-[var(--nimmit-text-primary)]">{job.clientId.profile.firstName} {job.clientId.profile.lastName}</span></p>
+                        </div>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    {job.priority !== "standard" && (
-                        <Badge variant={job.priority === "rush" ? "destructive" : "default"}>
-                            {job.priority}
-                        </Badge>
-                    )}
-                    <StatusBadge status={job.status} />
-                </div>
-            </div>
 
-            {/* Main Content */}
-            <div className="grid gap-6 lg:grid-cols-3">
-                <div className="lg:col-span-2 space-y-6">
-                    {/* Description */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Task Description</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="whitespace-pre-wrap">{job.description}</p>
-                        </CardContent>
-                    </Card>
+                {/* Main Content Grid */}
+                <div className="grid gap-6 lg:grid-cols-3">
+                    <div className="lg:col-span-2 space-y-6">
+                        {/* Description */}
+                        <Card className="border-[var(--nimmit-border)] shadow-sm animate-fade-up stagger-1">
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-lg font-display flex items-center gap-2">
+                                    <svg className="w-5 h-5 text-[var(--nimmit-accent-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                    Task Description
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent><p className="whitespace-pre-wrap text-[var(--nimmit-text-primary)]">{job.description}</p></CardContent>
+                        </Card>
 
-                    {/* Assignment Section (if pending) */}
-                    {job.status === "pending" && (
-                        <Card className="border-orange-500">
-                            <CardHeader>
-                                <CardTitle>Assign to Team Member</CardTitle>
-                                <CardDescription>
-                                    Select a worker to assign this job to
-                                </CardDescription>
+                        {/* Assignment Section */}
+                        {isPending && (
+                            <Card className="border-[var(--nimmit-warning)]/50 bg-[var(--nimmit-warning-bg)]/30 shadow-sm animate-fade-up stagger-2">
+                                <CardHeader className="pb-3">
+                                    <CardTitle className="text-lg font-display text-[var(--nimmit-warning)] flex items-center gap-2">
+                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                                        Assign to Team Member
+                                    </CardTitle>
+                                    <CardDescription>Select a worker to assign this job</CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="worker">Select Worker</Label>
+                                        <Select value={selectedWorkerId} onValueChange={setSelectedWorkerId}>
+                                            <SelectTrigger className="bg-white border-[var(--nimmit-border)]"><SelectValue placeholder="Choose a worker" /></SelectTrigger>
+                                            <SelectContent className="bg-[var(--nimmit-bg-elevated)] border-[var(--nimmit-border)]">
+                                                {availableWorkers.length === 0 ? (
+                                                    <SelectItem value="_none" disabled>No available workers</SelectItem>
+                                                ) : (
+                                                    availableWorkers.map((worker) => (
+                                                        <SelectItem key={worker._id.toString()} value={worker._id.toString()}>
+                                                            <span className="flex items-center gap-2">
+                                                                <span className={`w-2 h-2 rounded-full ${worker.workerProfile?.availability === "available" ? "bg-[var(--nimmit-success)]" : "bg-[var(--nimmit-warning)]"}`} />
+                                                                {worker.profile.firstName} {worker.profile.lastName} ({worker.workerProfile?.currentJobCount || 0}/{worker.workerProfile?.maxConcurrentJobs || 3})
+                                                            </span>
+                                                        </SelectItem>
+                                                    ))
+                                                )}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="hours">Estimated Hours (optional)</Label>
+                                        <Input id="hours" type="number" placeholder="e.g., 4" value={estimatedHours} onChange={(e) => setEstimatedHours(e.target.value)} className="border-[var(--nimmit-border)]" />
+                                    </div>
+                                    <Button onClick={assignJob} disabled={assigning || !selectedWorkerId} className="w-full bg-[var(--nimmit-accent-primary)] hover:bg-[var(--nimmit-accent-primary-hover)]">
+                                        {assigning ? "Assigning..." : "Assign Job"}
+                                    </Button>
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {/* Messages */}
+                        <Card className="border-[var(--nimmit-border)] shadow-sm animate-fade-up stagger-3">
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-lg font-display flex items-center gap-2">
+                                    <svg className="w-5 h-5 text-[var(--nimmit-accent-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                                    Messages
+                                </CardTitle>
+                                <CardDescription>Communication history</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="worker">Select Worker</Label>
-                                    <Select value={selectedWorkerId} onValueChange={setSelectedWorkerId}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Choose a worker" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {availableWorkers.length === 0 ? (
-                                                <SelectItem value="_none" disabled>
-                                                    No available workers
-                                                </SelectItem>
-                                            ) : (
-                                                availableWorkers.map((worker) => (
-                                                    <SelectItem
-                                                        key={worker._id.toString()}
-                                                        value={worker._id.toString()}
-                                                    >
-                                                        {worker.profile.firstName} {worker.profile.lastName} (
-                                                        {worker.workerProfile?.currentJobCount || 0}/
-                                                        {worker.workerProfile?.maxConcurrentJobs || 3} jobs)
-                                                    </SelectItem>
-                                                ))
-                                            )}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="hours">Estimated Hours (optional)</Label>
-                                    <Input
-                                        id="hours"
-                                        type="number"
-                                        placeholder="e.g., 4"
-                                        value={estimatedHours}
-                                        onChange={(e) => setEstimatedHours(e.target.value)}
-                                    />
-                                </div>
-
-                                <Button
-                                    onClick={assignJob}
-                                    disabled={assigning || !selectedWorkerId}
-                                    className="w-full"
-                                >
-                                    {assigning ? "Assigning..." : "Assign Job"}
-                                </Button>
+                                {job.messages.length === 0 ? (
+                                    <div className="text-center py-8"><p className="text-[var(--nimmit-text-tertiary)]">No messages yet</p></div>
+                                ) : (
+                                    <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
+                                        {job.messages.map((msg) => {
+                                            const roleColors: Record<string, string> = {
+                                                admin: "bg-[var(--nimmit-accent-secondary)]/10 border-[var(--nimmit-accent-secondary)]/20 ml-8",
+                                                worker: "bg-[var(--nimmit-accent-primary)]/10 border-[var(--nimmit-accent-primary)]/20",
+                                                client: "bg-[var(--nimmit-bg-secondary)] border-[var(--nimmit-border)] mr-8",
+                                            };
+                                            return (
+                                                <div key={msg.id} className={`p-3 rounded-xl border ${roleColors[msg.senderRole] || roleColors.client}`}>
+                                                    <div className="flex justify-between text-xs text-[var(--nimmit-text-tertiary)] mb-1">
+                                                        <span className="font-medium capitalize">{msg.senderRole}</span>
+                                                        <span>{new Date(msg.timestamp).toLocaleString()}</span>
+                                                    </div>
+                                                    <p className="text-sm text-[var(--nimmit-text-primary)]">{msg.message}</p>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                                {canMessage && (
+                                    <div className="flex gap-2 pt-4 border-t border-[var(--nimmit-border)]">
+                                        <Textarea placeholder="Type a message..." value={message} onChange={(e) => setMessage(e.target.value)} rows={2} className="border-[var(--nimmit-border)]" />
+                                        <Button onClick={sendMessage} disabled={!message.trim()} className="bg-[var(--nimmit-accent-primary)] hover:bg-[var(--nimmit-accent-primary-hover)] shrink-0">Send</Button>
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
-                    )}
+                    </div>
 
-                    {/* Messages */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Messages</CardTitle>
-                            <CardDescription>Communication history</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            {job.messages.length === 0 ? (
-                                <p className="text-muted-foreground text-center py-4">
-                                    No messages yet
-                                </p>
-                            ) : (
-                                <div className="space-y-4 max-h-80 overflow-y-auto">
-                                    {job.messages.map((msg) => (
-                                        <div
-                                            key={msg.id}
-                                            className={`p-3 rounded-lg ${msg.senderRole === "admin"
-                                                    ? "bg-blue-50 ml-8"
-                                                    : msg.senderRole === "worker"
-                                                        ? "bg-green-50"
-                                                        : "bg-gray-100 mr-8"
-                                                }`}
-                                        >
-                                            <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                                                <span className="font-medium capitalize">{msg.senderRole}</span>
-                                                <span>{new Date(msg.timestamp).toLocaleString()}</span>
-                                            </div>
-                                            <p className="text-sm">{msg.message}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
-                            {job.status !== "completed" && job.status !== "cancelled" && (
-                                <div className="flex gap-2 pt-4 border-t">
-                                    <Textarea
-                                        placeholder="Type a message..."
-                                        value={message}
-                                        onChange={(e) => setMessage(e.target.value)}
-                                        rows={2}
-                                    />
-                                    <Button onClick={sendMessage} disabled={!message.trim()}>
-                                        Send
-                                    </Button>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* Sidebar */}
-                <div className="space-y-6">
-                    {/* Job Details */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Details</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div>
-                                <p className="text-sm text-muted-foreground">Category</p>
-                                <p className="font-medium capitalize">{job.category}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-muted-foreground">Created</p>
-                                <p className="font-medium">
-                                    {new Date(job.createdAt).toLocaleDateString()}
-                                </p>
-                            </div>
-                            {job.assignedAt && (
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Assigned</p>
-                                    <p className="font-medium">
-                                        {new Date(job.assignedAt).toLocaleDateString()}
-                                    </p>
-                                </div>
-                            )}
-                            {job.startedAt && (
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Started</p>
-                                    <p className="font-medium">
-                                        {new Date(job.startedAt).toLocaleDateString()}
-                                    </p>
-                                </div>
-                            )}
-                            {job.completedAt && (
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Completed</p>
-                                    <p className="font-medium">
-                                        {new Date(job.completedAt).toLocaleDateString()}
-                                    </p>
-                                </div>
-                            )}
-                            {job.estimatedHours && (
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Estimated Hours</p>
-                                    <p className="font-medium">{job.estimatedHours} hours</p>
-                                </div>
-                            )}
-                            {job.actualHours && (
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Actual Hours</p>
-                                    <p className="font-medium">{job.actualHours} hours</p>
-                                </div>
-                            )}
-                            {job.rating && (
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Rating</p>
-                                    <p className="font-medium">{job.rating}/5 ⭐</p>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-
-                    {/* Client Info */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Client</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="font-medium">
-                                {job.clientId.profile.firstName} {job.clientId.profile.lastName}
-                            </p>
-                            <p className="text-sm text-muted-foreground">{job.clientId.email}</p>
-                        </CardContent>
-                    </Card>
-
-                    {/* Worker Info */}
-                    {job.workerId && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Assigned Worker</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="font-medium">
-                                    {job.workerId.profile.firstName} {job.workerId.profile.lastName}
-                                </p>
-                                <p className="text-sm text-muted-foreground">{job.workerId.email}</p>
-                            </CardContent>
-                        </Card>
-                    )}
-
-                    {/* Admin Actions */}
-                    {job.status !== "completed" && job.status !== "cancelled" && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Actions</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <Button
-                                    variant="destructive"
-                                    className="w-full"
-                                    onClick={cancelJob}
-                                >
-                                    Cancel Job
-                                </Button>
-                            </CardContent>
-                        </Card>
-                    )}
+                    {/* Sidebar */}
+                    <div className="space-y-6">
+                        <DetailsCard job={job} />
+                        <PersonCard title="Client" profile={job.clientId.profile} email={job.clientId.email} color="primary" delay={4} />
+                        {job.workerId && <PersonCard title="Assigned Worker" profile={job.workerId.profile} email={job.workerId.email} color="secondary" delay={5} />}
+                        {canMessage && (
+                            <Card className="border-[var(--nimmit-border)] shadow-sm animate-fade-up stagger-6">
+                                <CardHeader className="pb-3"><CardTitle className="text-lg font-display text-[var(--nimmit-error)]">Actions</CardTitle></CardHeader>
+                                <CardContent>
+                                    <Button variant="outline" className="w-full border-[var(--nimmit-error)] text-[var(--nimmit-error)] hover:bg-[var(--nimmit-error-bg)]" onClick={cancelJob}>Cancel Job</Button>
+                                </CardContent>
+                            </Card>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
     );
 }
 
+// Loading Skeleton
+function LoadingSkeleton() {
+    return (
+        <div className="min-h-screen bg-[var(--nimmit-bg-primary)]">
+            <div className="max-w-6xl mx-auto px-6 py-10 space-y-8">
+                <div className="space-y-4"><div className="h-4 w-24 skeleton rounded" /><div className="h-8 w-96 skeleton rounded" /><div className="h-4 w-48 skeleton rounded" /></div>
+                <div className="grid gap-6 lg:grid-cols-3">
+                    <div className="lg:col-span-2 space-y-6">{[1, 2].map((i) => <div key={i} className="rounded-xl border border-[var(--nimmit-border)] p-6"><div className="h-5 w-32 skeleton rounded mb-4" /><div className="space-y-2"><div className="h-4 w-full skeleton rounded" /><div className="h-4 w-3/4 skeleton rounded" /></div></div>)}</div>
+                    <div className="space-y-6">{[1, 2, 3].map((i) => <div key={i} className="rounded-xl border border-[var(--nimmit-border)] p-6"><div className="h-5 w-24 skeleton rounded mb-4" /><div className="space-y-2"><div className="h-4 w-full skeleton rounded" /><div className="h-4 w-2/3 skeleton rounded" /></div></div>)}</div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// Details Card
+function DetailsCard({ job }: { job: JobWithPopulated }) {
+    const details = [
+        { label: "Category", value: job.category },
+        { label: "Created", value: new Date(job.createdAt).toLocaleDateString() },
+        job.assignedAt && { label: "Assigned", value: new Date(job.assignedAt).toLocaleDateString() },
+        job.startedAt && { label: "Started", value: new Date(job.startedAt).toLocaleDateString() },
+        job.completedAt && { label: "Completed", value: new Date(job.completedAt).toLocaleDateString() },
+        job.estimatedHours && { label: "Est. Hours", value: `${job.estimatedHours}h` },
+        job.actualHours && { label: "Actual Hours", value: `${job.actualHours}h` },
+        job.rating && { label: "Rating", value: `${job.rating}/5 ⭐` },
+    ].filter(Boolean) as Array<{ label: string; value: string }>;
+
+    return (
+        <Card className="border-[var(--nimmit-border)] shadow-sm animate-fade-up stagger-3">
+            <CardHeader className="pb-3"><CardTitle className="text-lg font-display">Details</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+                {details.map((d) => (
+                    <div key={d.label} className="flex justify-between"><span className="text-sm text-[var(--nimmit-text-tertiary)]">{d.label}</span><span className="text-sm font-medium text-[var(--nimmit-text-primary)] capitalize">{d.value}</span></div>
+                ))}
+            </CardContent>
+        </Card>
+    );
+}
+
+// Person Card
+function PersonCard({ title, profile, email, color, delay }: { title: string; profile: { firstName: string; lastName: string }; email: string; color: "primary" | "secondary"; delay: number }) {
+    const colors = { primary: "bg-[var(--nimmit-accent-primary)]", secondary: "bg-[var(--nimmit-accent-secondary)]" };
+    return (
+        <Card className={`border-[var(--nimmit-border)] shadow-sm animate-fade-up stagger-${delay}`}>
+            <CardHeader className="pb-3"><CardTitle className="text-lg font-display">{title}</CardTitle></CardHeader>
+            <CardContent>
+                <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-full ${colors[color]}/10 flex items-center justify-center`}>
+                        <span className={`font-medium text-[var(--nimmit-accent-${color})]`}>{profile.firstName[0]}{profile.lastName[0]}</span>
+                    </div>
+                    <div>
+                        <p className="font-medium text-[var(--nimmit-text-primary)]">{profile.firstName} {profile.lastName}</p>
+                        <p className="text-sm text-[var(--nimmit-text-tertiary)]">{email}</p>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
+
+// Badges
 function StatusBadge({ status }: { status: string }) {
-    const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-        pending: "secondary",
-        assigned: "secondary",
-        in_progress: "default",
-        review: "default",
-        revision: "destructive",
-        completed: "outline",
-        cancelled: "destructive",
+    const config: Record<string, { className: string; label: string }> = {
+        pending: { className: "bg-[var(--nimmit-warning-bg)] text-[var(--nimmit-warning)] border-[var(--nimmit-warning)]/20", label: "Unassigned" },
+        assigned: { className: "bg-[var(--nimmit-info-bg)] text-[var(--nimmit-info)] border-[var(--nimmit-info)]/20", label: "Assigned" },
+        in_progress: { className: "bg-[var(--nimmit-accent-primary)]/10 text-[var(--nimmit-accent-primary)] border-[var(--nimmit-accent-primary)]/20", label: "In Progress" },
+        review: { className: "bg-[var(--nimmit-info-bg)] text-[var(--nimmit-info)] border-[var(--nimmit-info)]/20", label: "In Review" },
+        revision: { className: "bg-[var(--nimmit-error-bg)] text-[var(--nimmit-error)] border-[var(--nimmit-error)]/20", label: "Revision" },
+        completed: { className: "bg-[var(--nimmit-success-bg)] text-[var(--nimmit-success)] border-[var(--nimmit-success)]/20", label: "Completed" },
+        cancelled: { className: "bg-[var(--nimmit-bg-secondary)] text-[var(--nimmit-text-tertiary)] border-[var(--nimmit-border)]", label: "Cancelled" },
     };
+    const { className, label } = config[status] || config.pending;
+    return <Badge variant="outline" className={`px-2.5 py-0.5 text-xs font-medium border rounded-full ${className}`}>{label}</Badge>;
+}
 
-    const labels: Record<string, string> = {
-        pending: "Unassigned",
-        assigned: "Assigned",
-        in_progress: "In Progress",
-        review: "In Review",
-        revision: "Revision",
-        completed: "Completed",
-        cancelled: "Cancelled",
+function PriorityBadge({ priority }: { priority: string }) {
+    const config: Record<string, { className: string }> = {
+        rush: { className: "bg-[var(--nimmit-error)]/10 text-[var(--nimmit-error)] border-[var(--nimmit-error)]/20" },
+        express: { className: "bg-[var(--nimmit-warning-bg)] text-[var(--nimmit-warning)] border-[var(--nimmit-warning)]/20" },
     };
-
-    return <Badge variant={variants[status]}>{labels[status]}</Badge>;
+    return <Badge variant="outline" className={`px-2 py-0.5 text-xs border rounded-full ${config[priority]?.className}`}>{priority}</Badge>;
 }

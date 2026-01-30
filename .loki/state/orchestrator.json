@@ -1,14 +1,11 @@
 {
-  "version": "1.0.0",
   "phase": "development",
-  "subPhase": "foundation",
-  "prdPath": "/home/user0/Projects/nimmit-project/.agent/prompt.md",
-  "startedAt": "2026-01-29T00:00:00Z",
+  "iteration": 1,
+  "project": "nimmit-frontend-redesign",
+  "started_at": "2026-01-30T10:04:00+07:00",
   "metrics": {
-    "tasksCompleted": 0,
-    "tasksFailed": 0,
-    "currentIteration": 1
-  },
-  "activeFeature": "bullmq-background-workers",
-  "checkpoints": []
+    "tasks_completed": 0,
+    "tasks_pending": 4,
+    "retries": 0
+  }
 }
