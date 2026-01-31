@@ -53,4 +53,5 @@ This document serves as the central "Source of Truth" for the Nimmit platform ev
 | 2026-01-31| **Protocol Set** | Hardcoded date slugging and symlink recognition rules. | `htmly/system/` |
 | 2026-01-31 | **Foundation Notes** | Standardized `reandom-noetes.md` into `2026-01-31_nimmit_research_notes.md`. | `source/research/` |
 | 2026-01-31 | **Ledger Update** | Formalized Publication Strategy and Dynamic Draft status. | `NIMMIT_PROJECT_LEDGER.md` |
+| 2026-01-31 | **Article 1 PD** | Drafted "The New Way to Work" (Micro-Entity introduction). | `article_series/` |
 | 2026-01-31 | **Ledger Genesis** | Initialized this Project Ledger for permanent tracking. | `NIMMIT_PROJECT_LEDGER.md` |
