@@ -18,8 +18,9 @@ This document serves as the central "Source of Truth" for the Nimmit platform ev
 ## 2. Infrastructure & Architecture Map
 
 ### Access Points (Local Workspace)
-- **White Paper Hub**: `/home/user0/files/workspace/inbox/nimmit_white_paper`
-- **Insights & Blog Hub**: `/home/user0/files/workspace/inbox/fresh_ideas/fresh_insights`
+- **Consolidated Nimmit Hub**: `/home/user0/files/workspace/inbox/nimmit`
+- **White Paper Sub-Path**: `/home/user0/files/workspace/inbox/nimmit/white_paper`
+- **Insights & Blog Sub-Path**: `/home/user0/files/workspace/inbox/nimmit/fresh_insights`
 - **External Protocol**: `/home/user0/files/workspace/htmly/system/external_communication_protocol.md`
 
 ### Publication Strategy (Series Lock)
