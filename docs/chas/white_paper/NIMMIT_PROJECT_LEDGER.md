@@ -11,7 +11,7 @@ This document serves as the central "Source of Truth" for the Nimmit platform ev
 - **Reliability Arbitrage**: Competing on consistent high-quality outcomes rather than low-cost labor.
 
 > [!IMPORTANT]
-> **Dynamic Development**: All project documents are "Dynamic Drafts." As new research and notes are gathered, they are incorporated into the White Paper and Blog Series. The project is in a state of continuous evolution.
+> **Dynamic Development**: All project documents (White Paper, Blog Series, and Notes) are **Dynamic Drafts**. As we gather new notes and synthesize big ideas, they are continuously incorporated into all core documents. Everything is evolving in real-time.
 
 ---
 
