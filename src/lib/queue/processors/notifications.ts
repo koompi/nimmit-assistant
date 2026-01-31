@@ -98,21 +98,32 @@ function getEmailTemplate(type: NotificationType, data: NotificationJobData["dat
       `,
     },
     worker_welcome: {
-      subject: "Welcome to Nimmit!",
+      subject: "Welcome to Nimmit - Your Account is Ready!",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #3b82f6;">Welcome to Nimmit!</h2>
-          <p>Hello,</p>
-          <p>Welcome to the Nimmit team! We're excited to have you on board.</p>
+          <h2 style="color: #D45A45;">Welcome to Nimmit!</h2>
+          <p>Hello ${data.firstName || "there"},</p>
+          <p>Congratulations! Your application has been approved, and you're now part of the Nimmit team.</p>
+
+          ${data.tempPassword ? `
+          <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #f59e0b;">
+            <h3 style="margin-top: 0; color: #92400e;">Your Login Credentials</h3>
+            <p><strong>Email:</strong> ${data.email || ''}</p>
+            <p><strong>Temporary Password:</strong> <code style="background: #fff; padding: 4px 8px; border-radius: 4px; font-size: 16px;">${data.tempPassword}</code></p>
+            <p style="color: #92400e; font-size: 14px;"><strong>Important:</strong> Please change your password after your first login.</p>
+          </div>
+          ` : ''}
+
           <div style="background: #eff6ff; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #3b82f6;">
             <h3 style="margin-top: 0;">Getting Started</h3>
-            <ul>
+            <ol>
+              <li>Log in at <a href="https://nimmit.com/login">nimmit.com/login</a></li>
               <li>Update your profile and skills</li>
-              <li>Set your availability status</li>
-              <li>Review the worker guidelines</li>
-            </ul>
+              <li>Set your availability to "Available"</li>
+              <li>Wait for job assignments</li>
+            </ol>
           </div>
-          <p>You'll receive job notifications when tasks are assigned to you.</p>
+          <p>You'll receive email notifications when tasks are assigned to you.</p>
           <p>Best regards,<br>The Nimmit Team</p>
         </div>
       `,

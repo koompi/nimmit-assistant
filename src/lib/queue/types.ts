@@ -35,7 +35,7 @@ export type NotificationType =
   | "worker_welcome";     // New worker registration
 
 export interface NotificationJobData {
-  userId: Types.ObjectId;
+  userId: Types.ObjectId | string;
   email: string;
   type: NotificationType;
   data: {
@@ -44,9 +44,22 @@ export interface NotificationJobData {
     status?: string;
     workerName?: string;
     clientName?: string;
+    tempPassword?: string; // For worker_welcome emails
+    firstName?: string;
     // Additional context data
     [key: string]: unknown;
   };
+}
+
+// ===========================================
+// File Scan Queue Job
+// ===========================================
+
+export interface FileScanJobData {
+  fileKey: string;
+  jobId: string;
+  fileId: string;
+  clientId: string;
 }
 
 // ===========================================

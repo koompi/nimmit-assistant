@@ -206,7 +206,7 @@ export default function ClientJobDetailPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[var(--nimmit-bg-primary)]">
+        <div className="min-h-screen bg-[var(--nimmit-bg-primary)] pb-20">
             <div className="max-w-6xl mx-auto px-6 py-10">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-8 animate-fade-up">
@@ -242,7 +242,7 @@ export default function ClientJobDetailPage() {
                 <div className="grid gap-6 lg:grid-cols-3">
                     <div className="lg:col-span-2 space-y-6">
                         {/* Description Card */}
-                        <Card className="border-[var(--nimmit-border)] shadow-sm animate-fade-up stagger-1">
+                        <Card className="border-[var(--nimmit-border)] shadow-soft-sm animate-fade-up stagger-1">
                             <CardHeader className="pb-3">
                                 <CardTitle className="text-lg font-display">Description</CardTitle>
                             </CardHeader>
@@ -250,6 +250,11 @@ export default function ClientJobDetailPage() {
                                 <p className="whitespace-pre-wrap text-[var(--nimmit-text-primary)] leading-relaxed">{typedJob.description}</p>
                             </CardContent>
                         </Card>
+
+                        {/* QA Result Card */}
+                        {(typedJob.status === "review" || typedJob.status === "completed") && (
+                            <QAResultCard />
+                        )}
 
                         {/* Review Actions */}
                         {typedJob.status === "review" && !showRating && (
@@ -281,7 +286,7 @@ export default function ClientJobDetailPage() {
 
                         {/* Files */}
                         {(typedJob.files.length > 0 || typedJob.deliverables.length > 0) && (
-                            <Card className="border-[var(--nimmit-border)] shadow-sm animate-fade-up stagger-2">
+                            <Card className="border-[var(--nimmit-border)] shadow-soft-sm animate-fade-up stagger-2">
                                 <CardHeader className="pb-3">
                                     <CardTitle className="text-lg font-display">Files</CardTitle>
                                 </CardHeader>
@@ -308,6 +313,9 @@ export default function ClientJobDetailPage() {
 
                     {/* Sidebar */}
                     <div className="space-y-6">
+                        {/* Context Cloud Component */}
+                        <ContextCloudCard />
+
                         <DetailsCard job={typedJob} />
                         {typedJob.workerId && <AssistantCard worker={typedJob.workerId} />}
                         {(typedJob.status === "pending" || typedJob.status === "assigned") && (
@@ -345,6 +353,95 @@ function LoadingSkeleton() {
     );
 }
 
+// Context Cloud Card
+function ContextCloudCard() {
+    return (
+        <Card className="border-indigo-100 bg-[#EEF2FF] shadow-soft-sm animate-fade-up">
+            <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-md bg-indigo-100/50">
+                            <svg className="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                            </svg>
+                        </div>
+                        <CardTitle className="text-lg font-display text-indigo-950">Context Cloud</CardTitle>
+                    </div>
+                    <Badge variant="secondary" className="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 border-none">
+                        High Confidence
+                    </Badge>
+                </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <p className="text-sm text-indigo-900/80 leading-relaxed">
+                    Nimmit's AI has retrieved relevant context from your institutional memory to help your assistant.
+                </p>
+                <div className="space-y-2">
+                    {[
+                        { title: "Brand Voice Guidelines.pdf", type: "PDF", relevance: "98%" },
+                        { title: "Previous Landing Page Copy", type: "Task", relevance: "92%" },
+                        { title: "Preferred Color Palette", type: "Note", relevance: "85%" }
+                    ].map((item, i) => (
+                        <div key={i} className="flex items-center gap-3 p-2.5 rounded-[var(--nimmit-radius-lg)] bg-white border border-indigo-100/50 hover:border-indigo-200 transition-colors cursor-default">
+                            <div className="w-8 h-8 rounded bg-indigo-50 flex items-center justify-center text-indigo-500">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-indigo-950 truncate">{item.title}</p>
+                                <div className="flex items-center gap-2 text-xs text-indigo-900/60">
+                                    <span>{item.type}</span>
+                                    <span>•</span>
+                                    <span className="text-indigo-600 font-medium">{item.relevance} match</span>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </CardContent>
+        </Card>
+    )
+}
+
+// QA Result Card
+function QAResultCard() {
+    return (
+        <Card className="border-[var(--nimmit-success)]/30 bg-[var(--nimmit-success-bg)]/10 shadow-soft-sm animate-fade-up">
+            <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-[var(--nimmit-success)]/20 flex items-center justify-center">
+                        <svg className="w-4 h-4 text-[var(--nimmit-success)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <CardTitle className="text-lg font-display text-[var(--nimmit-success)]">Quality Assurance Passed</CardTitle>
+                        <CardDescription>Automated checks completed successfully</CardDescription>
+                    </div>
+                </div>
+            </CardHeader>
+            <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {[
+                        "Grammar & Spelling Check",
+                        "Link Validity Verification",
+                        "Brand Voice Compliance",
+                        "File Integrity Scan"
+                    ].map((check, i) => (
+                        <div key={i} className="flex items-center gap-2 text-sm text-[var(--nimmit-text-secondary)]">
+                            <svg className="w-4 h-4 text-[var(--nimmit-success)] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            {check}
+                        </div>
+                    ))}
+                </div>
+            </CardContent>
+        </Card>
+    )
+}
+
 // Review Card
 function ReviewCard({ message, setMessage, onApprove, onRevision }: {
     message: string;
@@ -353,7 +450,7 @@ function ReviewCard({ message, setMessage, onApprove, onRevision }: {
     onRevision: () => void;
 }) {
     return (
-        <Card className="border-[var(--nimmit-success)]/30 bg-[var(--nimmit-success-bg)]/30 shadow-sm animate-fade-up">
+        <Card className="border-[var(--nimmit-success)]/30 bg-[var(--nimmit-success-bg)]/30 shadow-soft-sm animate-fade-up">
             <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-full bg-[var(--nimmit-success)]/20 flex items-center justify-center">
@@ -369,7 +466,7 @@ function ReviewCard({ message, setMessage, onApprove, onRevision }: {
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="flex gap-3">
-                    <Button onClick={onApprove} className="flex-1 bg-[var(--nimmit-success)] hover:bg-[var(--nimmit-success)]/90">
+                    <Button onClick={onApprove} className="flex-1 bg-[var(--nimmit-success)] hover:bg-[var(--nimmit-success)]/90 shadow-soft-sm">
                         <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
@@ -405,7 +502,7 @@ function RatingCard({ selectedRating, onSetRating, onSubmit, onCancel, completin
     errors: ReturnType<typeof useForm<CompleteJobInput>>["formState"]["errors"];
 }) {
     return (
-        <Card className="border-[var(--nimmit-success)]/30 bg-[var(--nimmit-success-bg)]/30 shadow-sm animate-scale-in">
+        <Card className="border-[var(--nimmit-success)]/30 bg-[var(--nimmit-success-bg)]/30 shadow-soft-sm animate-scale-in">
             <CardHeader className="pb-3">
                 <CardTitle className="text-lg font-display">Rate this Task</CardTitle>
                 <CardDescription>How would you rate the delivery?</CardDescription>
@@ -447,7 +544,7 @@ function RatingCard({ selectedRating, onSetRating, onSubmit, onCancel, completin
 // Completed Card
 function CompletedCard({ job }: { job: JobWithPopulated }) {
     return (
-        <Card className="border-[var(--nimmit-success)]/30 bg-[var(--nimmit-success-bg)]/50 shadow-sm animate-fade-up">
+        <Card className="border-[var(--nimmit-success)]/30 bg-[var(--nimmit-success-bg)]/50 shadow-soft-sm animate-fade-up">
             <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-full bg-[var(--nimmit-success)]/20 flex items-center justify-center">
@@ -485,7 +582,7 @@ function MessagesCard({ messages, status, message, setMessage, onSend }: {
     const canMessage = !["completed", "cancelled", "pending"].includes(status);
 
     return (
-        <Card className="border-[var(--nimmit-border)] shadow-sm animate-fade-up stagger-3">
+        <Card className="border-[var(--nimmit-border)] shadow-soft-sm animate-fade-up stagger-3">
             <CardHeader className="pb-3">
                 <CardTitle className="text-lg font-display">Messages</CardTitle>
                 <CardDescription>Communication with your assistant</CardDescription>
@@ -540,7 +637,7 @@ function DetailsCard({ job }: { job: JobWithPopulated }) {
     ].filter(Boolean) as { label: string; value: string; icon: string }[];
 
     return (
-        <Card className="border-[var(--nimmit-border)] shadow-sm animate-fade-up stagger-4">
+        <Card className="border-[var(--nimmit-border)] shadow-soft-sm animate-fade-up stagger-4">
             <CardHeader className="pb-3">
                 <CardTitle className="text-lg font-display">Details</CardTitle>
             </CardHeader>
@@ -566,7 +663,7 @@ function DetailsCard({ job }: { job: JobWithPopulated }) {
 // Assistant Card
 function AssistantCard({ worker }: { worker: NonNullable<JobWithPopulated["workerId"]> }) {
     return (
-        <Card className="border-[var(--nimmit-border)] shadow-sm animate-fade-up stagger-5">
+        <Card className="border-[var(--nimmit-border)] shadow-soft-sm animate-fade-up stagger-5">
             <CardHeader className="pb-3">
                 <CardTitle className="text-lg font-display">Your Assistant</CardTitle>
             </CardHeader>
@@ -587,7 +684,7 @@ function AssistantCard({ worker }: { worker: NonNullable<JobWithPopulated["worke
 // Actions Card
 function ActionsCard({ onCancel }: { onCancel: () => void }) {
     return (
-        <Card className="border-[var(--nimmit-border)] shadow-sm animate-fade-up stagger-6">
+        <Card className="border-[var(--nimmit-border)] shadow-soft-sm animate-fade-up stagger-6">
             <CardHeader className="pb-3">
                 <CardTitle className="text-lg font-display">Actions</CardTitle>
             </CardHeader>

@@ -13,11 +13,12 @@ import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 function LoginForm() {
   const router = useRouter();
@@ -25,6 +26,7 @@ function LoginForm() {
   const callbackUrl = searchParams.get("callbackUrl") || "/";
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<"client" | "worker">("client");
 
   const {
     register,
@@ -59,99 +61,144 @@ function LoginForm() {
     }
   };
 
+  const tabContent = {
+    client: {
+      title: "Welcome back",
+      subtitle: "Sign in to continue to Nimmit",
+    },
+    worker: {
+      title: "Worker Portal",
+      subtitle: "Sign in to access your assignments",
+    },
+  };
+
   return (
-    <Card className="w-full max-w-md animate-scale-in shadow-lg border-[var(--nimmit-border)]">
-      <CardHeader className="space-y-2 text-center pb-2">
-        {/* Logo/Brand */}
-        <div className="mx-auto mb-4">
-          <div className="w-12 h-12 rounded-xl bg-[var(--nimmit-accent-primary)] flex items-center justify-center">
-            <span className="text-white font-bold text-xl font-display">N</span>
-          </div>
+    <Card className="w-full max-w-[380px] bg-white border-none shadow-[0_2px_12px_rgba(0,0,0,0.06)] sm:rounded-2xl overflow-hidden animate-fade-up">
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => setActiveTab(value as "client" | "worker")}
+        className="w-full"
+      >
+        {/* Role Tabs */}
+        <div className="px-8 pt-6">
+          <TabsList className="w-full h-10 bg-[#F5F2F0] rounded-lg p-1">
+            <TabsTrigger
+              value="client"
+              className="flex-1 h-8 text-[13px] font-medium rounded-md data-[state=active]:bg-white data-[state=active]:text-[#1F1F1F] data-[state=active]:shadow-sm text-[#6B6B6B] transition-all duration-200"
+            >
+              Client
+            </TabsTrigger>
+            <TabsTrigger
+              value="worker"
+              className="flex-1 h-8 text-[13px] font-medium rounded-md data-[state=active]:bg-white data-[state=active]:text-[#1F1F1F] data-[state=active]:shadow-sm text-[#6B6B6B] transition-all duration-200"
+            >
+              Worker
+            </TabsTrigger>
+          </TabsList>
         </div>
-        <CardTitle className="text-2xl font-display tracking-tight">
-          Welcome back
-        </CardTitle>
-        <CardDescription className="text-[var(--nimmit-text-secondary)]">
-          Sign in to your account to continue
-        </CardDescription>
-      </CardHeader>
+
+        <TabsContent value="client" className="mt-0">
+          <CardHeader className="space-y-4 text-center pb-2 pt-6">
+            {/* Logo/Brand - Minimalist Scale */}
+            <div className="mx-auto mb-2">
+              <div className="w-9 h-9 rounded-[8px] bg-[#D45A45] flex items-center justify-center text-white font-bold text-lg font-display shadow-sm">
+                N
+              </div>
+            </div>
+            <div className="space-y-1">
+              <CardTitle className="text-[28px] font-[family-name:var(--font-source-serif)] font-normal text-[#1F1F1F] tracking-tight">
+                {tabContent.client.title}
+              </CardTitle>
+              <CardDescription className="text-[#8e8e8e] text-[15px]">
+                {tabContent.client.subtitle}
+              </CardDescription>
+            </div>
+          </CardHeader>
+        </TabsContent>
+
+        <TabsContent value="worker" className="mt-0">
+          <CardHeader className="space-y-4 text-center pb-2 pt-6">
+            {/* Logo/Brand - Minimalist Scale */}
+            <div className="mx-auto mb-2">
+              <div className="w-9 h-9 rounded-[8px] bg-[#D45A45] flex items-center justify-center text-white font-bold text-lg font-display shadow-sm">
+                N
+              </div>
+            </div>
+            <div className="space-y-1">
+              <CardTitle className="text-[28px] font-[family-name:var(--font-source-serif)] font-normal text-[#1F1F1F] tracking-tight">
+                {tabContent.worker.title}
+              </CardTitle>
+              <CardDescription className="text-[#8e8e8e] text-[15px]">
+                {tabContent.worker.subtitle}
+              </CardDescription>
+            </div>
+          </CardHeader>
+        </TabsContent>
+      </Tabs>
 
       <form onSubmit={handleSubmit(onSubmit)}>
-        <CardContent className="space-y-5 pt-4">
-          {/* KID OAuth Button */}
+        <CardContent className="space-y-4 pt-4 px-8">
+          {/* KOOMPI ID Button - Primary Call to Action */}
           <Button
             type="button"
             onClick={() => signIn("kid", { callbackUrl })}
-            className="w-full h-12 text-base font-medium bg-[#2563eb] hover:bg-[#1d4ed8] text-white
-                       shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center gap-3"
+            className="w-full h-[44px] text-[15px] font-medium bg-[var(--nimmit-accent-primary)] hover:bg-[var(--nimmit-accent-primary-hover)] text-white
+                       shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-md transition-all duration-200 rounded-lg flex items-center justify-center gap-2.5"
           >
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+            <svg className="w-5 h-5 opacity-90" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
             </svg>
             Sign in with KOOMPI ID
           </Button>
 
           {/* Divider */}
-          <div className="relative">
+          <div className="relative py-2">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-[var(--nimmit-border)]" />
+              <div className="w-full border-t border-[#F0F0F0]" />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-[var(--nimmit-bg-elevated)] px-3 text-[var(--nimmit-text-tertiary)]">
-                Or continue with email
+            <div className="relative flex justify-center text-[11px] font-medium tracking-wide uppercase text-[#9CA3AF]">
+              <span className="bg-white px-3">
+                OR
               </span>
             </div>
           </div>
 
-          {/* Error Alert */}
-          {error && (
-            <div className="rounded-lg bg-[var(--nimmit-error-bg)] border border-[var(--nimmit-error)]/20 p-4 animate-fade-in">
-              <p className="text-sm text-[var(--nimmit-error)] font-medium flex items-center gap-2">
-                <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                {error}
-              </p>
-            </div>
-          )}
-
           {/* Email Field */}
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <Label
               htmlFor="email"
-              className="text-sm font-medium text-[var(--nimmit-text-primary)]"
+              className="text-[13px] font-medium text-[#4B4B4B]"
             >
-              Email address
+              Email
             </Label>
             <Input
               id="email"
               type="email"
-              placeholder="you@example.com"
+              placeholder="name@work-email.com"
               autoComplete="email"
-              className="h-12 bg-[var(--nimmit-bg-secondary)] border-[var(--nimmit-border)] 
-                         focus:border-[var(--nimmit-accent-primary)] focus:ring-[var(--nimmit-ring-color)]
-                         placeholder:text-[var(--nimmit-text-tertiary)] transition-all duration-200"
+              className="h-[44px] bg-[#FFFFFF] border-[#E5E5E5] focus:border-[#A3A3A3] focus:ring-1 focus:ring-[#A3A3A3]
+                         placeholder:text-[#A1A1AA] text-[#1F1F1F] rounded-lg transition-all duration-200 shadow-sm"
               {...register("email")}
             />
             {errors.email && (
-              <p className="text-sm text-[var(--nimmit-error)] animate-fade-in">
+              <p className="text-xs text-red-500 animate-fade-in pl-1">
                 {errors.email.message}
               </p>
             )}
           </div>
 
           {/* Password Field */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
+          <div className="space-y-1.5">
+            <div className="flex justify-between items-center">
               <Label
                 htmlFor="password"
-                className="text-sm font-medium text-[var(--nimmit-text-primary)]"
+                className="text-[13px] font-medium text-[#4B4B4B]"
               >
                 Password
               </Label>
               <Link
                 href="/forgot-password"
-                className="text-sm text-[var(--nimmit-accent-primary)] hover:text-[var(--nimmit-accent-primary-hover)] transition-colors"
+                className="text-[12px] font-medium text-[#D45A45] hover:text-[#B0462B] transition-colors"
               >
                 Forgot password?
               </Link>
@@ -159,67 +206,60 @@ function LoginForm() {
             <Input
               id="password"
               type="password"
-              placeholder="Enter your password"
+              placeholder="Your password"
               autoComplete="current-password"
-              className="h-12 bg-[var(--nimmit-bg-secondary)] border-[var(--nimmit-border)] 
-                         focus:border-[var(--nimmit-accent-primary)] focus:ring-[var(--nimmit-ring-color)]
-                         placeholder:text-[var(--nimmit-text-tertiary)] transition-all duration-200"
+              className="h-[44px] bg-[#FFFFFF] border-[#E5E5E5] focus:border-[#A3A3A3] focus:ring-1 focus:ring-[#A3A3A3]
+                         placeholder:text-[#A1A1AA] text-[#1F1F1F] rounded-lg transition-all duration-200 shadow-sm"
               {...register("password")}
             />
             {errors.password && (
-              <p className="text-sm text-[var(--nimmit-error)] animate-fade-in">
+              <p className="text-xs text-red-500 animate-fade-in pl-1">
                 {errors.password.message}
               </p>
             )}
           </div>
-        </CardContent>
 
-        <CardFooter className="flex flex-col space-y-6 pt-2">
-          {/* Submit Button */}
+          {/* Error Alert */}
+          {error && (
+            <div className="rounded-md bg-red-50 border border-red-100 p-2.5 animate-fade-in">
+              <p className="text-xs text-red-600 font-medium flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {error}
+              </p>
+            </div>
+          )}
+
           <Button
             type="submit"
-            className="w-full h-12 text-base font-medium bg-[var(--nimmit-accent-primary)] 
-                       hover:bg-[var(--nimmit-accent-primary-hover)] text-white
-                       shadow-sm hover:shadow-md transition-all duration-200
-                       disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full h-[44px] text-[15px] font-medium bg-[#1F1F1F] hover:bg-[#000000] text-white
+                       rounded-lg shadow-sm transition-all duration-200
+                       disabled:opacity-70 disabled:cursor-not-allowed mt-2"
             disabled={isLoading}
           >
-            {isLoading ? (
-              <span className="flex items-center gap-2">
-                <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                Signing in...
-              </span>
-            ) : (
-              "Sign in"
-            )}
+            {isLoading ? "Signing in..." : "Continue with Email"}
           </Button>
 
-          {/* Divider */}
-          <div className="relative w-full">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-[var(--nimmit-border)]" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-[var(--nimmit-bg-elevated)] px-3 text-[var(--nimmit-text-tertiary)]">
-                New to Nimmit?
-              </span>
-            </div>
-          </div>
+        </CardContent>
 
-          {/* Register Link */}
-          <Link
-            href="/register"
-            className="w-full h-12 inline-flex items-center justify-center rounded-lg
-                       border border-[var(--nimmit-border)] bg-[var(--nimmit-bg-elevated)]
-                       text-[var(--nimmit-text-primary)] font-medium
-                       hover:bg-[var(--nimmit-bg-secondary)] hover:border-[var(--nimmit-border-hover)]
-                       transition-all duration-200"
-          >
-            Create an account
-          </Link>
+        <CardFooter className="flex flex-col items-center gap-3 pb-8 pt-2">
+          <p className="text-[13px] text-[#6B6B6B]">
+            Don&apos;t have an account?{" "}
+            <Link href="/register" className="font-medium text-[#D45A45] hover:text-[#B0462B] transition-colors">
+              Sign up
+            </Link>
+          </p>
+
+          {/* Worker-specific link */}
+          {activeTab === "worker" && (
+            <Link
+              href="/careers"
+              className="text-[13px] text-[#6B6B6B] hover:text-[#D45A45] transition-colors animate-fade-in"
+            >
+              Not a worker yet? <span className="font-medium text-[#D45A45]">Apply to join our team</span> &rarr;
+            </Link>
+          )}
         </CardFooter>
       </form>
     </Card>
@@ -228,38 +268,15 @@ function LoginForm() {
 
 function LoadingSkeleton() {
   return (
-    <div className="w-full max-w-md">
-      <div className="rounded-xl border border-[var(--nimmit-border)] bg-[var(--nimmit-bg-elevated)] p-8">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="w-12 h-12 rounded-xl skeleton" />
-          <div className="h-7 w-40 skeleton rounded-lg" />
-          <div className="h-5 w-56 skeleton rounded-lg" />
-        </div>
-        <div className="mt-8 space-y-5">
-          <div className="space-y-2">
-            <div className="h-4 w-24 skeleton rounded" />
-            <div className="h-12 w-full skeleton rounded-lg" />
-          </div>
-          <div className="space-y-2">
-            <div className="h-4 w-20 skeleton rounded" />
-            <div className="h-12 w-full skeleton rounded-lg" />
-          </div>
-          <div className="h-12 w-full skeleton rounded-lg mt-6" />
-        </div>
-      </div>
+    <div className="w-full max-w-[380px] h-[520px] bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center">
+      <div className="w-6 h-6 border-2 border-[#E5E5E5] border-t-[#1F1F1F] rounded-full animate-spin" />
     </div>
   );
 }
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-4">
-      {/* Subtle decorative elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-[var(--nimmit-accent-primary)]/5 blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-[var(--nimmit-accent-tertiary)]/5 blur-3xl" />
-      </div>
-
+    <div className="min-h-screen flex items-center justify-center bg-[#F5F2F0] p-4 font-[family-name:var(--font-dm-sans)]">
       <Suspense fallback={<LoadingSkeleton />}>
         <LoginForm />
       </Suspense>

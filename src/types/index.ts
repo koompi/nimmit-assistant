@@ -107,6 +107,7 @@ export interface JobDeliverable {
   id: string;
   name: string;
   url: string;
+  key?: string; // R2 storage key
   size: number;
   mimeType: string;
   version: number;

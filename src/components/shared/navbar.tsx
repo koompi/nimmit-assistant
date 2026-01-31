@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,8 +11,11 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { NotificationBell } from "@/components/shared/notification-bell";
 
 export function Navbar() {
   const { data: session } = useSession();
@@ -74,6 +77,17 @@ export function Navbar() {
 
         {/* Right Side */}
         <div className="flex items-center gap-3">
+          {/* Real-time Notifications */}
+          <NotificationBell
+            onNotificationClick={(notification) => {
+              // Navigate to job if notification has jobId
+              if (notification.data?.jobId) {
+                const role = user.role === 'admin' ? 'admin' : user.role;
+                window.location.href = `/${role}/jobs/${notification.data.jobId}`;
+              }
+            }}
+          />
+
           {/* Mobile Menu Button */}
           <Button
             variant="ghost"
@@ -106,7 +120,7 @@ export function Navbar() {
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="w-64 bg-[var(--nimmit-bg-elevated)] border-[var(--nimmit-border)] shadow-lg"
+              className="w-64 bg-[var(--nimmit-bg-elevated)] border-[var(--nimmit-border)] shadow-soft-lg"
             >
               <div className="flex items-center gap-3 p-3">
                 <Avatar className="h-10 w-10 border border-[var(--nimmit-border)]">
@@ -215,6 +229,8 @@ function RoleBadge({ role }: { role: string }) {
     </span>
   );
 }
+
+// Old NotificationBell removed - now using real-time version from notification-bell.tsx
 
 function getNavItems(role: string, dashboardPath: string) {
   const items = [

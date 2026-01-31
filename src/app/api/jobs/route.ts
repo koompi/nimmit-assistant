@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db/connection";
 import { Job, User } from "@/lib/db/models";
 import { createJobSchema } from "@/lib/validations/job";
 import { addJobAnalysisJob } from "@/lib/queue";
+import { calculateJobCost, checkCredits } from "@/lib/payments/credits";
 
 // GET /api/jobs - List jobs based on user role
 export async function GET(request: Request) {
@@ -120,17 +121,76 @@ export async function POST(request: Request) {
 
     await connectDB();
 
-    // Create the job immediately with "pending" status
-    // AI analysis and auto-assignment will be processed asynchronously by workers
+    // Get client's current credits
+    const client = await User.findById(session.user.id);
+    if (!client || !client.clientProfile) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: { code: "NOT_FOUND", message: "Client profile not found" },
+        },
+        { status: 404 }
+      );
+    }
+
+    // Calculate credit cost
+    const creditCost = calculateJobCost(parsed.data.category, parsed.data.priority);
+    const availableCredits =
+      (client.clientProfile.billing?.credits || 0) +
+      (client.clientProfile.billing?.rolloverCredits || 0);
+
+    // Check if client has enough credits
+    const creditCheck = checkCredits(availableCredits, creditCost.total);
+    if (!creditCheck.hasEnough) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "INSUFFICIENT_CREDITS",
+            message: `Not enough credits. Required: ${creditCost.total}, Available: ${availableCredits}`,
+            details: {
+              required: creditCost.total,
+              available: availableCredits,
+              shortfall: creditCheck.shortfall,
+              breakdown: creditCost.breakdown,
+            },
+          },
+        },
+        { status: 402 } // Payment Required
+      );
+    }
+
+    // Deduct credits (use rollover first, then regular)
+    let rolloverToDeduct = 0;
+    let regularToDeduct = 0;
+    const rolloverCredits = client.clientProfile.billing?.rolloverCredits || 0;
+    const regularCredits = client.clientProfile.billing?.credits || 0;
+
+    if (rolloverCredits >= creditCost.total) {
+      // All from rollover
+      rolloverToDeduct = creditCost.total;
+    } else {
+      // Use all rollover, rest from regular
+      rolloverToDeduct = rolloverCredits;
+      regularToDeduct = creditCost.total - rolloverCredits;
+    }
+
+    // Create the job with credit cost stored
     const job = await Job.create({
       clientId: session.user.id,
       ...parsed.data,
       status: "pending",
+      creditsCharged: creditCost.total,
     });
 
-    // Increment client's total jobs
+    // Deduct credits and increment total jobs/spent
     await User.findByIdAndUpdate(session.user.id, {
-      $inc: { "clientProfile.totalJobs": 1 },
+      $inc: {
+        "clientProfile.totalJobs": 1,
+        "clientProfile.totalSpent": creditCost.total,
+        "clientProfile.billing.credits": -regularToDeduct,
+        "clientProfile.billing.rolloverCredits": -rolloverToDeduct,
+      },
     });
 
     // Queue job analysis (non-blocking, processed by worker)

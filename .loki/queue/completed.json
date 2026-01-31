@@ -1,3 +1,171 @@
-{
-  "tasks": []
-}
+[
+  {
+    "id": "s1-001",
+    "sprint": 1,
+    "description": "Credit deduction on job creation",
+    "status": "completed",
+    "completed_at": "2026-01-31T04:30:00+07:00"
+  },
+  {
+    "id": "s1-002",
+    "sprint": 1,
+    "description": "Worker earnings tracking",
+    "status": "completed",
+    "completed_at": "2026-01-31T04:30:00+07:00"
+  },
+  {
+    "id": "s1-003",
+    "sprint": 1,
+    "description": "Email notifications with temp password",
+    "status": "completed",
+    "completed_at": "2026-01-31T04:30:00+07:00"
+  },
+  {
+    "id": "s1-004",
+    "sprint": 1,
+    "description": "Admin payout export endpoint",
+    "status": "completed",
+    "completed_at": "2026-01-31T04:30:00+07:00"
+  },
+  {
+    "id": "s2-001",
+    "sprint": 2,
+    "description": "Create briefing chat API",
+    "status": "completed",
+    "completed_at": "2026-01-31T06:00:00+07:00"
+  },
+  {
+    "id": "s2-002",
+    "sprint": 2,
+    "description": "AI conversation engine",
+    "status": "completed",
+    "completed_at": "2026-01-31T06:00:00+07:00"
+  },
+  {
+    "id": "s2-003",
+    "sprint": 2,
+    "description": "Client context injection",
+    "status": "completed",
+    "completed_at": "2026-01-31T06:00:00+07:00"
+  },
+  {
+    "id": "s2-004",
+    "sprint": 2,
+    "description": "Connect UI to backend",
+    "status": "completed",
+    "completed_at": "2026-01-31T06:00:00+07:00"
+  },
+  {
+    "id": "s3-001",
+    "sprint": 3,
+    "description": "Worker context search API",
+    "status": "completed",
+    "completed_at": "2026-01-31T07:00:00+07:00"
+  },
+  {
+    "id": "s3-002",
+    "sprint": 3,
+    "description": "Client context display on job detail",
+    "status": "completed",
+    "completed_at": "2026-01-31T07:00:00+07:00"
+  },
+  {
+    "id": "s3-003",
+    "sprint": 3,
+    "description": "Confidence flag feature",
+    "status": "completed",
+    "completed_at": "2026-01-31T07:00:00+07:00"
+  },
+  {
+    "id": "s3-004",
+    "sprint": 3,
+    "description": "Progress updates",
+    "status": "completed",
+    "completed_at": "2026-01-31T07:00:00+07:00"
+  },
+  {
+    "id": "s4-001",
+    "sprint": 4,
+    "description": "Job metrics tracking",
+    "status": "completed",
+    "completed_at": "2026-01-31T08:00:00+07:00"
+  },
+  {
+    "id": "s4-002",
+    "sprint": 4,
+    "description": "Analytics API",
+    "status": "completed",
+    "completed_at": "2026-01-31T08:00:00+07:00"
+  },
+  {
+    "id": "s4-003",
+    "sprint": 4,
+    "description": "Client analytics dashboard",
+    "status": "completed",
+    "completed_at": "2026-01-31T08:00:00+07:00"
+  },
+  {
+    "id": "s4-004",
+    "sprint": 4,
+    "description": "Worker performance dashboard",
+    "status": "completed",
+    "completed_at": "2026-01-31T08:00:00+07:00"
+  },
+  {
+    "id": "s5-001",
+    "sprint": 5,
+    "description": "Add file virus scanning with ClamAV integration",
+    "status": "completed",
+    "completed_at": "2026-01-31T21:15:00+07:00"
+  },
+  {
+    "id": "s5-002",
+    "sprint": 5,
+    "description": "Implement rate limiting middleware for all API endpoints",
+    "status": "completed",
+    "completed_at": "2026-01-31T21:15:00+07:00"
+  },
+  {
+    "id": "s5-003",
+    "sprint": 5,
+    "description": "Add password reset flow with forgot-password and reset endpoints",
+    "status": "completed",
+    "completed_at": "2026-01-31T21:16:00+07:00"
+  },
+  {
+    "id": "s5-004",
+    "sprint": 5,
+    "description": "Implement job status transition validation",
+    "status": "completed",
+    "completed_at": "2026-01-31T21:16:00+07:00"
+  },
+  {
+    "id": "s5-005",
+    "sprint": 5,
+    "description": "Add DLQ retry endpoint for failed queue jobs",
+    "status": "completed",
+    "completed_at": "2026-01-31T21:41:00+07:00"
+  },
+  {
+    "id": "s5-006",
+    "sprint": 5,
+    "description": "Enforce concurrent job limits on worker assignment",
+    "status": "completed",
+    "completed_at": "2026-01-31T21:42:00+07:00"
+  },
+  {
+    "id": "s5-007",
+    "sprint": 5,
+    "description": "Add Sentry error monitoring integration",
+    "status": "skipped",
+    "skipped_at": "2026-01-31T22:00:00+07:00",
+    "reason": "User requested skip"
+  },
+  {
+    "id": "s5-008",
+    "sprint": 5,
+    "description": "Implement scheduled tasks (rating aggregation, briefing cleanup)",
+    "status": "completed",
+    "completed_at": "2026-01-31T21:43:00+07:00"
+  }
+]

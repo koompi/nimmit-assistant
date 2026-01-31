@@ -1,3 +1,11 @@
-{
-  "tasks": []
-}
+[
+  {
+    "id": "s6-002",
+    "sprint": 6,
+    "type": "full-stack",
+    "priority": "high",
+    "description": "Real-Time Notifications with WebSocket",
+    "status": "in_progress",
+    "started_at": "2026-01-31T22:30:00+07:00"
+  }
+]

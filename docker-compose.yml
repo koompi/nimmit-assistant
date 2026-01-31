@@ -5,9 +5,7 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      - mongo-data:/data/db
-    environment:
-      MONGO_INITDB_DATABASE: nimmit
+      - mongodb_data:/data/db
     restart: unless-stopped
 
   redis:
@@ -15,37 +13,10 @@ services:
     container_name: nimmit-redis
     ports:
       - "6379:6379"
-    command: redis-server --appendonly yes
     volumes:
-      - redis-data:/data
+      - redis_data:/data
     restart: unless-stopped
-
-  clamav:
-    image: clamav/clamav:latest
-    container_name: nimmit-clamav
-    ports:
-      - "3310:3310"
-    volumes:
-      - clamav-data:/var/lib/clamav
-    restart: unless-stopped
-
-  # Worker service for production
-  # Uncomment and build Dockerfile.worker when deploying to production
-  # worker:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile.worker
-  #   container_name: nimmit-worker
-  #   depends_on:
-  #     - mongodb
-  #     - redis
-  #   environment:
-  #     - NODE_ENV=production
-  #     - REDIS_URL=redis://redis:6379
-  #     - MONGODB_URI=mongodb://mongodb:27017/nimmit
-  #   restart: unless-stopped
 
 volumes:
-  mongo-data:
-  redis-data:
-  clamav-data:
+  mongodb_data:
+  redis_data:

@@ -248,16 +248,27 @@ export async function scoreWorkers(
 ): Promise<WorkerScore[]> {
   await connectDB();
 
-  // Get all active workers
+  // Get all active workers who are not at capacity
   const workers = (await User.find({
     role: "worker",
     isActive: true,
     "workerProfile.availability": { $ne: "offline" },
+    // Enforce concurrent job limit - only include workers with capacity
+    $expr: {
+      $lt: [
+        "$workerProfile.currentJobCount",
+        "$workerProfile.maxConcurrentJobs"
+      ]
+    }
   }).lean()) as unknown as WorkerData[];
 
   const scores: WorkerScore[] = [];
 
   for (const worker of workers) {
+    // Double-check capacity (belt and suspenders)
+    if (worker.workerProfile.currentJobCount >= worker.workerProfile.maxConcurrentJobs) {
+      continue;
+    }
     const breakdown = {
       skillMatch: calculateSkillMatch(worker, analysis),
       availability: calculateAvailabilityScore(worker),

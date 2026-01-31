@@ -11,7 +11,22 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { FileList } from "@/components/job/file-list";
 import { FileUpload } from "@/components/job/file-upload";
+import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
 import type { Job, JobMessage } from "@/types";
+
+interface ProgressUpdate {
+    id: string;
+    content: string;
+    percentage?: number;
+    createdAt: Date;
+}
+
+interface ConfidenceFlag {
+    flagged: boolean;
+    reason?: string;
+    flaggedAt?: Date;
+}
 
 interface UploadedFile {
     id: string;
@@ -25,6 +40,8 @@ interface UploadedFile {
 interface JobWithPopulated extends Omit<Job, "clientId" | "messages"> {
     clientId: { _id: string; profile: { firstName: string; lastName: string }; email: string };
     messages: Array<JobMessage & { senderRole: string }>;
+    progressUpdates?: ProgressUpdate[];
+    confidenceFlag?: ConfidenceFlag;
 }
 
 export default function WorkerJobDetailPage() {
@@ -270,6 +287,16 @@ export default function WorkerJobDetailPage() {
                     <div className="space-y-6">
                         <DetailsCard job={job} />
                         <ClientCard client={job.clientId} />
+
+                        {/* Progress Updates */}
+                        {["assigned", "in_progress", "revision"].includes(job.status) && (
+                            <ProgressCard jobId={params.id as string} updates={job.progressUpdates || []} onUpdateAdded={(update) => setJob(prev => prev ? {...prev, progressUpdates: [...(prev.progressUpdates || []), update]} : null)} />
+                        )}
+
+                        {/* Confidence Flag */}
+                        {["assigned", "in_progress"].includes(job.status) && (
+                            <ConfidenceFlagCard jobId={params.id as string} flag={job.confidenceFlag} onFlagged={(flag) => setJob(prev => prev ? {...prev, confidenceFlag: flag} : null)} />
+                        )}
                     </div>
                 </div>
             </div>
@@ -403,4 +430,160 @@ function PriorityBadge({ priority }: { priority: string }) {
         express: { className: "bg-[var(--nimmit-warning-bg)] text-[var(--nimmit-warning)] border-[var(--nimmit-warning)]/20" },
     };
     return <Badge variant="outline" className={`px-2 py-0.5 text-xs border rounded-full ${config[priority]?.className}`}>{priority}</Badge>;
+}
+
+// Progress Updates Card
+function ProgressCard({ jobId, updates, onUpdateAdded }: { jobId: string; updates: ProgressUpdate[]; onUpdateAdded: (update: ProgressUpdate) => void }) {
+    const [content, setContent] = useState("");
+    const [percentage, setPercentage] = useState<number>(0);
+    const [submitting, setSubmitting] = useState(false);
+    const [showForm, setShowForm] = useState(false);
+
+    const handleSubmit = async () => {
+        if (!content.trim()) return;
+        setSubmitting(true);
+        try {
+            const response = await fetch(`/api/jobs/${jobId}/progress`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ content: content.trim(), percentage: percentage > 0 ? percentage : undefined }),
+            });
+            const data = await response.json();
+            if (data.success) {
+                onUpdateAdded(data.data);
+                setContent("");
+                setPercentage(0);
+                setShowForm(false);
+                toast.success("Progress update added");
+            } else {
+                toast.error(data.error || "Failed to add update");
+            }
+        } catch {
+            toast.error("Failed to add update");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    return (
+        <Card className="border-[var(--nimmit-border)] shadow-sm animate-fade-up">
+            <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-display flex items-center gap-2">
+                    <svg className="w-5 h-5 text-[var(--nimmit-accent-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                    Progress
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+                {updates.length > 0 && (
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                        {updates.slice().reverse().map((u) => (
+                            <div key={u.id} className="text-sm p-2 rounded bg-[var(--nimmit-bg-secondary)] border border-[var(--nimmit-border)]">
+                                <div className="flex justify-between text-xs text-[var(--nimmit-text-tertiary)] mb-1">
+                                    {u.percentage !== undefined && <span className="font-medium text-[var(--nimmit-accent-primary)]">{u.percentage}%</span>}
+                                    <span>{new Date(u.createdAt).toLocaleString()}</span>
+                                </div>
+                                <p className="text-[var(--nimmit-text-primary)]">{u.content}</p>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {showForm ? (
+                    <div className="space-y-3 pt-2 border-t border-[var(--nimmit-border)]">
+                        <Textarea placeholder="What did you work on?" value={content} onChange={(e) => setContent(e.target.value)} rows={2} className="border-[var(--nimmit-border)]" />
+                        <div className="space-y-1">
+                            <div className="flex justify-between text-xs text-[var(--nimmit-text-tertiary)]">
+                                <span>Completion</span><span>{percentage}%</span>
+                            </div>
+                            <Slider value={[percentage]} onValueChange={(v) => setPercentage(v[0])} max={100} step={5} />
+                        </div>
+                        <div className="flex gap-2">
+                            <Button variant="outline" size="sm" onClick={() => setShowForm(false)} className="flex-1">Cancel</Button>
+                            <Button size="sm" onClick={handleSubmit} disabled={!content.trim() || submitting} className="flex-1 bg-[var(--nimmit-accent-primary)]">{submitting ? "..." : "Add"}</Button>
+                        </div>
+                    </div>
+                ) : (
+                    <Button variant="outline" size="sm" onClick={() => setShowForm(true)} className="w-full border-dashed">
+                        + Add Progress Update
+                    </Button>
+                )}
+            </CardContent>
+        </Card>
+    );
+}
+
+// Confidence Flag Card
+function ConfidenceFlagCard({ jobId, flag, onFlagged }: { jobId: string; flag?: ConfidenceFlag; onFlagged: (flag: ConfidenceFlag) => void }) {
+    const [reason, setReason] = useState("");
+    const [submitting, setSubmitting] = useState(false);
+    const [showForm, setShowForm] = useState(false);
+
+    if (flag?.flagged) {
+        return (
+            <Card className="border-[var(--nimmit-warning)]/30 bg-[var(--nimmit-warning-bg)]/30 shadow-sm">
+                <CardHeader className="pb-3">
+                    <CardTitle className="text-lg font-display text-[var(--nimmit-warning)] flex items-center gap-2">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                        Flagged for Review
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-sm text-[var(--nimmit-warning)]">{flag.reason}</p>
+                    <p className="text-xs text-[var(--nimmit-text-tertiary)] mt-2">Admin will review and provide guidance.</p>
+                </CardContent>
+            </Card>
+        );
+    }
+
+    const handleFlag = async () => {
+        if (!reason.trim()) return;
+        setSubmitting(true);
+        try {
+            const response = await fetch(`/api/jobs/${jobId}/flag`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ reason: reason.trim() }),
+            });
+            const data = await response.json();
+            if (data.success) {
+                onFlagged({ flagged: true, reason: reason.trim(), flaggedAt: new Date() });
+                setReason("");
+                setShowForm(false);
+                toast.success("Job flagged for admin review");
+            } else {
+                toast.error(data.error || "Failed to flag job");
+            }
+        } catch {
+            toast.error("Failed to flag job");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    return (
+        <Card className="border-[var(--nimmit-border)] shadow-sm">
+            <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-display flex items-center gap-2">
+                    <svg className="w-5 h-5 text-[var(--nimmit-text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    Need Help?
+                </CardTitle>
+                <CardDescription>Flag this job if you need clarification</CardDescription>
+            </CardHeader>
+            <CardContent>
+                {showForm ? (
+                    <div className="space-y-3">
+                        <Textarea placeholder="Describe what you're unsure about..." value={reason} onChange={(e) => setReason(e.target.value)} rows={2} className="border-[var(--nimmit-border)]" />
+                        <div className="flex gap-2">
+                            <Button variant="outline" size="sm" onClick={() => setShowForm(false)} className="flex-1">Cancel</Button>
+                            <Button size="sm" onClick={handleFlag} disabled={!reason.trim() || submitting} className="flex-1 bg-[var(--nimmit-warning)] text-white">{submitting ? "..." : "Flag"}</Button>
+                        </div>
+                    </div>
+                ) : (
+                    <Button variant="outline" size="sm" onClick={() => setShowForm(true)} className="w-full text-[var(--nimmit-text-secondary)]">
+                        Flag for Clarification
+                    </Button>
+                )}
+            </CardContent>
+        </Card>
+    );
 }

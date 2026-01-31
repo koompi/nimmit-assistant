@@ -44,14 +44,17 @@ export default function KIDProvider<P extends KIDProfile>(
         token: "https://oauth.koompi.org/v2/oauth/token",
         userinfo: "https://oauth.koompi.org/v2/oauth/userinfo",
 
+        // KOOMPI API wraps user data: { user: { _id, fullname, email, ... }, status: "success" }
         profile(profile) {
+            // Handle both wrapped and unwrapped responses
+            const user = (profile as { user?: KIDProfile }).user || profile;
             return {
-                id: profile._id,
-                name: profile.fullname,
-                email: profile.email,
+                id: user._id,
+                name: user.fullname,
+                email: user.email,
                 image: null,
                 role: "client" as const,
-                walletAddress: profile.wallet_address,
+                walletAddress: user.wallet_address,
             };
         },
 

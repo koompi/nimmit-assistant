@@ -12,6 +12,7 @@ import {
 } from "@/lib/validations/job";
 import { randomUUID } from "crypto";
 import { storeJobContext } from "@/lib/ai/context";
+import { calculateWorkerEarnings } from "@/lib/payments/credits";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -262,6 +263,11 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       job.rating = parsed.data.rating;
       job.feedback = parsed.data.feedback;
 
+      // Calculate worker earnings based on credits charged
+      if (job.creditsCharged) {
+        job.workerEarnings = calculateWorkerEarnings(job.creditsCharged);
+      }
+
       await job.save();
 
       // Store in context cloud (non-blocking)
@@ -277,7 +283,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
         console.error("Failed to store context (non-critical):", contextError);
       }
 
-      // Update worker stats
+      // Update worker stats including pending earnings
       if (job.workerId) {
         const workerJobs = await Job.find({
           workerId: job.workerId,
@@ -289,9 +295,12 @@ export async function PATCH(request: Request, { params }: RouteParams) {
           workerJobs.reduce((sum, j) => sum + (j.rating || 0), 0) /
           workerJobs.length;
 
+        const earningsToAdd = job.workerEarnings || 0;
+
         await User.findByIdAndUpdate(job.workerId, {
           $inc: {
             "workerProfile.stats.completedJobs": 1,
+            "workerProfile.stats.totalEarnings": earningsToAdd,
             "workerProfile.currentJobCount": -1,
           },
           $set: { "workerProfile.stats.avgRating": avgRating },

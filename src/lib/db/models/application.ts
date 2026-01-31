@@ -16,6 +16,7 @@ export interface IApplication extends Document {
     status: "pending" | "approved" | "rejected";
     reviewedBy?: mongoose.Types.ObjectId;
     reviewedAt?: Date;
+    convertedUserId?: mongoose.Types.ObjectId;
 
     // AI analysis of the application
     aiAnalysis?: {
@@ -52,6 +53,7 @@ const ApplicationSchema = new Schema<IApplication>(
 
         reviewedBy: { type: Schema.Types.ObjectId, ref: "User" },
         reviewedAt: { type: Date },
+        convertedUserId: { type: Schema.Types.ObjectId, ref: "User" },
 
         aiAnalysis: {
             score: { type: Number },

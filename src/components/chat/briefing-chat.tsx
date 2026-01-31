@@ -1,22 +1,31 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Loader2, Send, RotateCcw, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import type { JobCategory, JobPriority } from "@/types";
+import type { ExtractedBrief } from "@/lib/db/models/briefing";
 
 interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
-  options?: { value: string; label: string }[];
+  timestamp?: Date;
 }
 
-type Step = "welcome" | "describe" | "category" | "priority" | "confirm";
+interface BriefingState {
+  briefingId: string | null;
+  messages: Message[];
+  extractedBrief: ExtractedBrief | null;
+  isComplete: boolean;
+  isLoading: boolean;
+  isSubmitting: boolean;
+}
 
 const categoryLabels: Record<JobCategory, string> = {
   video: "Video Editing",
@@ -27,207 +36,254 @@ const categoryLabels: Record<JobCategory, string> = {
   other: "Other",
 };
 
-const priorityOptions = [
-  { value: "standard", label: "Standard (48 hours)" },
-  { value: "priority", label: "Priority (24 hours)" },
-  { value: "rush", label: "Rush (12 hours)" },
-];
+const priorityLabels: Record<JobPriority, string> = {
+  standard: "Standard (48 hours)",
+  priority: "Priority (24 hours)",
+  rush: "Rush (12 hours)",
+};
 
 export function BriefingChat() {
   const router = useRouter();
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      role: "assistant",
-      content:
-        "Hi! I'm here to help capture your task. What do you need done today?",
-    },
-  ]);
+  const [state, setState] = useState<BriefingState>({
+    briefingId: null,
+    messages: [],
+    extractedBrief: null,
+    isComplete: false,
+    isLoading: true,
+    isSubmitting: false,
+  });
   const [input, setInput] = useState("");
-  const [step, setStep] = useState<Step>("describe");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Collected data
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState<JobCategory | null>(null);
-  const [priority, setPriority] = useState<JobPriority>("standard");
-
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
+  // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [state.messages]);
 
-  const addMessage = (msg: Omit<Message, "id">) => {
-    setMessages((prev) => [...prev, { ...msg, id: Date.now().toString() }]);
-  };
-
-  const detectCategory = (text: string): JobCategory | null => {
-    const lower = text.toLowerCase();
-    if (lower.includes("video") || lower.includes("edit") || lower.includes("youtube") || lower.includes("footage"))
-      return "video";
-    if (lower.includes("design") || lower.includes("logo") || lower.includes("graphic") || lower.includes("banner"))
-      return "design";
-    if (lower.includes("web") || lower.includes("site") || lower.includes("page") || lower.includes("landing"))
-      return "web";
-    if (lower.includes("social") || lower.includes("instagram") || lower.includes("twitter") || lower.includes("post"))
-      return "social";
-    if (lower.includes("data") || lower.includes("spreadsheet") || lower.includes("research") || lower.includes("admin"))
-      return "admin";
-    return null;
-  };
-
-  const handleSend = () => {
-    if (!input.trim()) return;
-
-    const userMessage = input.trim();
-    addMessage({ role: "user", content: userMessage });
-    setInput("");
-
-    if (step === "describe") {
-      // Extract title from first sentence/line
-      const firstLine = userMessage.split(/[.\n]/)[0].slice(0, 100);
-      setTitle(firstLine);
-      setDescription(userMessage);
-
-      const detected = detectCategory(userMessage);
-      if (detected) {
-        setCategory(detected);
-        addMessage({
-          role: "assistant",
-          content: `Sounds like a **${categoryLabels[detected]}** task. Is that right?`,
-          options: [
-            { value: "yes", label: "Yes, that's right" },
-            { value: "no", label: "No, let me pick" },
-          ],
-        });
-        setStep("category");
-      } else {
-        addMessage({
-          role: "assistant",
-          content: "What type of task is this?",
-          options: Object.entries(categoryLabels).map(([value, label]) => ({
-            value,
-            label,
-          })),
-        });
-        setStep("category");
-      }
+  // Focus input when loading is done
+  useEffect(() => {
+    if (!state.isLoading && inputRef.current) {
+      inputRef.current.focus();
     }
-  };
+  }, [state.isLoading]);
 
-  const handleOptionSelect = (value: string) => {
-    if (step === "category") {
-      if (value === "yes" && category) {
-        addMessage({ role: "user", content: `Yes, it's ${categoryLabels[category]}` });
-      } else if (value === "no") {
-        addMessage({ role: "user", content: "Let me pick the category" });
-        addMessage({
-          role: "assistant",
-          content: "What type of task is this?",
-          options: Object.entries(categoryLabels).map(([v, label]) => ({
-            value: v,
-            label,
+  // Load existing briefing session on mount
+  useEffect(() => {
+    loadBriefing();
+  }, []);
+
+  const loadBriefing = async () => {
+    try {
+      const response = await fetch("/api/briefing");
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        setState((prev) => ({
+          ...prev,
+          briefingId: result.data.briefingId,
+          messages: result.data.messages.map((m: Message, i: number) => ({
+            ...m,
+            id: `msg-${i}`,
           })),
-        });
-        return;
+          extractedBrief: result.data.extractedBrief || null,
+          isLoading: false,
+        }));
       } else {
-        setCategory(value as JobCategory);
-        addMessage({ role: "user", content: categoryLabels[value as JobCategory] });
+        // No active briefing - start fresh with welcome message
+        setState((prev) => ({
+          ...prev,
+          messages: [
+            {
+              id: "welcome",
+              role: "assistant",
+              content:
+                "Hi! I'm here to help capture your task. What do you need done today?",
+            },
+          ],
+          isLoading: false,
+        }));
       }
-
-      addMessage({
-        role: "assistant",
-        content: "When do you need this completed?",
-        options: priorityOptions,
-      });
-      setStep("priority");
-    } else if (step === "priority") {
-      setPriority(value as JobPriority);
-      const selected = priorityOptions.find((p) => p.value === value);
-      addMessage({ role: "user", content: selected?.label || value });
-
-      // Show confirmation
-      const summary = `Here's what I captured:\n\n**Task:** ${title}\n**Category:** ${categoryLabels[category!]}\n**Priority:** ${selected?.label}\n\nReady to submit?`;
-      addMessage({
-        role: "assistant",
-        content: summary,
-        options: [
-          { value: "submit", label: "Submit Task" },
-          { value: "edit", label: "Start Over" },
-        ],
-      });
-      setStep("confirm");
-    } else if (step === "confirm") {
-      if (value === "submit") {
-        handleSubmit();
-      } else {
-        // Reset
-        setMessages([
+    } catch {
+      setState((prev) => ({
+        ...prev,
+        messages: [
           {
-            id: "1",
+            id: "welcome",
             role: "assistant",
             content:
-              "No problem! Let's start fresh. What do you need done today?",
+              "Hi! I'm here to help capture your task. What do you need done today?",
           },
-        ]);
-        setStep("describe");
-        setTitle("");
-        setDescription("");
-        setCategory(null);
-        setPriority("standard");
-      }
+        ],
+        isLoading: false,
+      }));
     }
   };
 
-  const handleSubmit = async () => {
-    setIsSubmitting(true);
-    addMessage({ role: "user", content: "Submit my task" });
-    addMessage({ role: "assistant", content: "Creating your task..." });
+  const sendMessage = async () => {
+    if (!input.trim() || state.isLoading || state.isSubmitting) return;
+
+    const userMessage = input.trim();
+    const tempId = `temp-${Date.now()}`;
+
+    // Optimistically add user message
+    setState((prev) => ({
+      ...prev,
+      messages: [
+        ...prev.messages,
+        { id: tempId, role: "user", content: userMessage },
+      ],
+      isLoading: true,
+    }));
+    setInput("");
 
     try {
-      const response = await fetch("/api/jobs", {
+      const response = await fetch("/api/briefing", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title,
-          description,
-          category,
-          priority,
+          message: userMessage,
+          briefingId: state.briefingId,
         }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error?.message || "Failed to create task");
+        throw new Error(result.error?.message || result.error || "Failed to send message");
       }
 
-      addMessage({
-        role: "assistant",
-        content: "Your task has been submitted! Redirecting...",
+      setState((prev) => ({
+        ...prev,
+        briefingId: result.data.briefingId,
+        messages: [
+          ...prev.messages,
+          {
+            id: `assistant-${Date.now()}`,
+            role: "assistant",
+            content: result.data.message,
+          },
+        ],
+        extractedBrief: result.data.extractedBrief || null,
+        isComplete: result.data.isComplete || false,
+        isLoading: false,
+      }));
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to send message"
+      );
+      setState((prev) => ({
+        ...prev,
+        isLoading: false,
+      }));
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!state.briefingId || !state.extractedBrief) {
+      toast.error("Please complete the briefing first");
+      return;
+    }
+
+    setState((prev) => ({ ...prev, isSubmitting: true }));
+
+    try {
+      const response = await fetch("/api/briefing/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ briefingId: state.briefingId }),
       });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        if (result.error?.code === "INSUFFICIENT_CREDITS") {
+          toast.error(
+            `Not enough credits. Required: ${result.error.details.required}, Available: ${result.error.details.available}`
+          );
+        } else {
+          throw new Error(result.error?.message || result.error || "Failed to submit");
+        }
+        setState((prev) => ({ ...prev, isSubmitting: false }));
+        return;
+      }
 
       toast.success("Task created successfully!");
 
+      // Add success message
+      setState((prev) => ({
+        ...prev,
+        messages: [
+          ...prev.messages,
+          {
+            id: `success-${Date.now()}`,
+            role: "assistant",
+            content: `Your task has been created! Redirecting to job details...`,
+          },
+        ],
+      }));
+
+      // Redirect to job
       setTimeout(() => {
-        router.push(`/client/jobs/${result.data._id}`);
-      }, 1000);
+        router.push(`/client/jobs/${result.data.jobId}`);
+      }, 1500);
     } catch (error) {
-      addMessage({
-        role: "assistant",
-        content: `Something went wrong: ${error instanceof Error ? error.message : "Unknown error"}. Please try again.`,
-      });
-      setIsSubmitting(false);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create task"
+      );
+      setState((prev) => ({ ...prev, isSubmitting: false }));
     }
   };
+
+  const handleReset = async () => {
+    setState((prev) => ({ ...prev, isLoading: true }));
+
+    try {
+      await fetch("/api/briefing", { method: "DELETE" });
+
+      setState({
+        briefingId: null,
+        messages: [
+          {
+            id: "welcome",
+            role: "assistant",
+            content:
+              "No problem! Let's start fresh. What do you need done today?",
+          },
+        ],
+        extractedBrief: null,
+        isComplete: false,
+        isLoading: false,
+        isSubmitting: false,
+      });
+      setInput("");
+    } catch {
+      toast.error("Failed to reset. Please try again.");
+      setState((prev) => ({ ...prev, isLoading: false }));
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  // Render loading state
+  if (state.isLoading && state.messages.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-12rem)]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-[calc(100vh-12rem)] max-w-2xl mx-auto">
       {/* Messages */}
       <div className="flex-1 overflow-y-auto space-y-4 p-4">
-        {messages.map((msg) => (
+        {state.messages.map((msg) => (
           <div
             key={msg.id}
             className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
@@ -240,63 +296,121 @@ export function BriefingChat() {
               }`}
             >
               <p className="whitespace-pre-wrap text-sm">{msg.content}</p>
-              {msg.options && (
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {msg.options.map((opt) => (
-                    <Button
-                      key={opt.value}
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => handleOptionSelect(opt.value)}
-                      disabled={isSubmitting}
-                    >
-                      {opt.label}
-                    </Button>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
         ))}
+
+        {state.isLoading && (
+          <div className="flex justify-start">
+            <div className="max-w-[80%] rounded-2xl px-4 py-3 bg-muted">
+              <div className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span className="text-sm text-muted-foreground">Thinking...</span>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      {step === "describe" && (
+      {/* Action buttons when brief is complete */}
+      {state.isComplete && state.extractedBrief && !state.isSubmitting && (
         <div className="border-t p-4">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSend();
-            }}
-            className="flex gap-2"
-          >
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Describe your task..."
-              disabled={isSubmitting}
-              className="flex-1"
-            />
-            <Button type="submit" disabled={!input.trim() || isSubmitting}>
-              Send
+          <div className="flex gap-3 justify-center">
+            <Button
+              variant="outline"
+              onClick={handleReset}
+              disabled={state.isLoading}
+            >
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Start Over
             </Button>
-          </form>
+            <Button onClick={handleSubmit} disabled={state.isLoading}>
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Submit Task
+            </Button>
+          </div>
         </div>
       )}
 
-      {/* Step indicator */}
-      <div className="border-t p-2 flex justify-center gap-2">
-        {(["describe", "category", "priority", "confirm"] as Step[]).map((s, i) => (
-          <Badge
-            key={s}
-            variant={step === s ? "default" : "outline"}
-            className="text-xs"
+      {/* Input - only show when not complete or submitting */}
+      {!state.isComplete && !state.isSubmitting && (
+        <div className="border-t p-4">
+          <div className="flex gap-2">
+            <Input
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Describe your task..."
+              disabled={state.isLoading}
+              className="flex-1"
+            />
+            <Button
+              onClick={sendMessage}
+              disabled={!input.trim() || state.isLoading}
+              size="icon"
+            >
+              {state.isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Brief preview card */}
+      {state.extractedBrief && (
+        <div className="border-t p-4 bg-muted/50">
+          <Card className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="font-medium text-sm">Brief Preview</h4>
+              <Badge variant={state.isComplete ? "default" : "secondary"}>
+                {Math.round(state.extractedBrief.confidence * 100)}% complete
+              </Badge>
+            </div>
+            <div className="text-sm space-y-1">
+              {state.extractedBrief.title && (
+                <p>
+                  <span className="text-muted-foreground">Title:</span>{" "}
+                  {state.extractedBrief.title}
+                </p>
+              )}
+              {state.extractedBrief.category && (
+                <p>
+                  <span className="text-muted-foreground">Category:</span>{" "}
+                  {categoryLabels[state.extractedBrief.category]}
+                </p>
+              )}
+              {state.extractedBrief.priority && (
+                <p>
+                  <span className="text-muted-foreground">Priority:</span>{" "}
+                  {priorityLabels[state.extractedBrief.priority]}
+                </p>
+              )}
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Reset button at bottom */}
+      {state.messages.length > 1 && !state.isComplete && (
+        <div className="border-t p-2 flex justify-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleReset}
+            disabled={state.isLoading}
+            className="text-muted-foreground"
           >
-            {i + 1}. {s.charAt(0).toUpperCase() + s.slice(1)}
-          </Badge>
-        ))}
-      </div>
+            <RotateCcw className="h-3 w-3 mr-1" />
+            Start Over
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

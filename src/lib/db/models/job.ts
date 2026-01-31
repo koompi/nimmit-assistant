@@ -36,6 +36,7 @@ const JobDeliverableSchema = new Schema<JobDeliverable>(
     id: { type: String, required: true },
     name: { type: String, required: true },
     url: { type: String, required: true },
+    key: { type: String }, // R2 storage key
     size: { type: Number, required: true },
     mimeType: { type: String, required: true },
     version: { type: Number, default: 1 },
@@ -88,6 +89,41 @@ export interface IJob extends Document {
 
   aiAnalysis?: JobAIAnalysis;
   contextFromPastWork?: string;
+
+  // Payment tracking
+  creditsCharged?: number;
+  workerEarnings?: number;
+  workerPaidAt?: Date;
+
+  // Worker flags
+  confidenceFlag?: {
+    flagged: boolean;
+    reason?: string;
+    flaggedAt?: Date;
+    resolvedAt?: Date;
+    resolvedBy?: Types.ObjectId;
+  };
+
+  // Progress updates
+  progressUpdates: {
+    id: string;
+    content: string;
+    percentage?: number;
+    createdAt: Date;
+  }[];
+
+  // QA Results
+  qaResults?: {
+    checkedAt: Date;
+    overallPassed: boolean;
+    overallScore: number;
+    results: {
+      fileName: string;
+      fileKey: string;
+      passed: boolean;
+      score: number;
+    }[];
+  };
 
   createdAt: Date;
   updatedAt: Date;
@@ -185,6 +221,48 @@ const JobSchema = new Schema<IJob>(
     },
 
     contextFromPastWork: { type: String },
+
+    // Payment tracking
+    creditsCharged: { type: Number },
+    workerEarnings: { type: Number },
+    workerPaidAt: { type: Date },
+
+    // Worker confidence flag
+    confidenceFlag: {
+      flagged: { type: Boolean, default: false },
+      reason: { type: String },
+      flaggedAt: { type: Date },
+      resolvedAt: { type: Date },
+      resolvedBy: { type: Schema.Types.ObjectId, ref: "User" },
+    },
+
+    // Progress updates
+    progressUpdates: {
+      type: [
+        {
+          id: { type: String, required: true },
+          content: { type: String, required: true },
+          percentage: { type: Number, min: 0, max: 100 },
+          createdAt: { type: Date, default: Date.now },
+        },
+      ],
+      default: [],
+    },
+
+    // QA Results
+    qaResults: {
+      checkedAt: { type: Date },
+      overallPassed: { type: Boolean },
+      overallScore: { type: Number },
+      results: [
+        {
+          fileName: { type: String },
+          fileKey: { type: String },
+          passed: { type: Boolean },
+          score: { type: Number },
+        },
+      ],
+    },
 
     assignedAt: { type: Date },
     startedAt: { type: Date },

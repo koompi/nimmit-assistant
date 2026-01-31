@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
         const result = applicationSchema.safeParse(body);
         if (!result.success) {
             return NextResponse.json(
-                { success: false, error: "Invalid data", details: result.error.errors },
+                { success: false, error: "Invalid data", details: result.error.issues },
                 { status: 400 }
             );
         }

@@ -1,36 +1,20 @@
-{
-  "tasks": [
-    {
-      "id": "redesign-worker-job-detail",
-      "priority": 1,
-      "type": "frontend",
-      "file": "src/app/worker/jobs/[id]/page.tsx",
-      "description": "Redesign worker job detail page with warm Nimmit aesthetic",
-      "status": "pending"
-    },
-    {
-      "id": "redesign-admin-job-detail",
-      "priority": 2,
-      "type": "frontend",
-      "file": "src/app/admin/jobs/[id]/page.tsx",
-      "description": "Redesign admin job detail page with assignment controls",
-      "status": "pending"
-    },
-    {
-      "id": "redesign-client-billing",
-      "priority": 3,
-      "type": "frontend",
-      "file": "src/app/client/billing/page.tsx",
-      "description": "Redesign client billing/subscription page",
-      "status": "pending"
-    },
-    {
-      "id": "redesign-client-new-job",
-      "priority": 4,
-      "type": "frontend",
-      "file": "src/app/client/jobs/new/page.tsx",
-      "description": "Redesign new job creation form",
-      "status": "pending"
-    }
-  ]
-}
+[
+  {
+    "id": "s6-003",
+    "sprint": 6,
+    "type": "full-stack",
+    "priority": "high",
+    "description": "Admin Analytics Dashboard",
+    "status": "pending",
+    "dependencies": []
+  },
+  {
+    "id": "s6-004",
+    "sprint": 6,
+    "type": "full-stack",
+    "priority": "high",
+    "description": "Email notification preferences",
+    "status": "pending",
+    "dependencies": []
+  }
+]

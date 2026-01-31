@@ -51,24 +51,22 @@ export default function ClientDashboard() {
   const firstName = session?.user?.name?.split(" ")[0] || "there";
 
   return (
-    <div className="min-h-screen bg-[var(--nimmit-bg-primary)]">
-      <div className="max-w-6xl mx-auto px-6 py-10 space-y-8">
+    <div className="min-h-screen bg-[var(--nimmit-bg-primary)] pb-20">
+      <div className="max-w-6xl mx-auto px-6 py-10 space-y-10">
         {/* Welcome Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 animate-fade-up">
           <div>
-            <h1 className="text-3xl md:text-4xl font-display font-semibold tracking-tight text-[var(--nimmit-text-primary)]">
-              Welcome back, {firstName}!
+            <h1 className="text-3xl md:text-5xl font-display font-bold tracking-tight text-[var(--nimmit-text-primary)] mb-3">
+              Welcome back, {firstName}
             </h1>
-            <p className="text-[var(--nimmit-text-secondary)] mt-2 text-lg">
+            <p className="text-[var(--nimmit-text-secondary)] text-lg md:text-xl font-light">
               Send us your tasks before bed, wake up to completed work.
             </p>
           </div>
           <Link href="/client/jobs/new">
             <Button
               size="lg"
-              className="h-12 px-6 text-base font-medium bg-[var(--nimmit-accent-primary)] 
-                         hover:bg-[var(--nimmit-accent-primary-hover)] text-white
-                         shadow-sm hover:shadow-md transition-all duration-200"
+              className="h-14 px-8 text-base font-semibold shadow-soft-md hover:shadow-soft-lg transition-all duration-300"
             >
               <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -79,7 +77,7 @@ export default function ClientDashboard() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-3">
           <StatsCard
             label="Active Tasks"
             value={activeJobs.length}
@@ -117,54 +115,43 @@ export default function ClientDashboard() {
         </div>
 
         {/* Recent Jobs */}
-        <Card className="border-[var(--nimmit-border)] shadow-sm animate-fade-up stagger-3">
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-xl font-display">Recent Tasks</CardTitle>
-                <CardDescription className="text-[var(--nimmit-text-secondary)]">
-                  Your latest task requests
-                </CardDescription>
-              </div>
-              <Link href="/client/jobs">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-[var(--nimmit-border)] hover:bg-[var(--nimmit-bg-secondary)]"
-                >
-                  View All
-                </Button>
-              </Link>
+        <div className="space-y-6 animate-fade-up stagger-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-display font-semibold text-[var(--nimmit-text-primary)]">Recent Tasks</h2>
+              <p className="text-[var(--nimmit-text-secondary)]">Your latest task activity</p>
             </div>
-          </CardHeader>
-          <CardContent>
+            <Link href="/client/jobs">
+              <Button
+                variant="ghost"
+                className="text-[var(--nimmit-text-secondary)] hover:text-[var(--nimmit-text-primary)] hover:bg-[var(--nimmit-bg-secondary)]"
+              >
+                View All
+                <svg className="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Button>
+            </Link>
+          </div>
+
+          <div className="grid gap-4">
             {loading ? (
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex items-center justify-between p-4 rounded-lg border border-[var(--nimmit-border)]">
-                    <div className="space-y-2 flex-1">
-                      <div className="h-5 w-48 skeleton rounded" />
-                      <div className="h-4 w-32 skeleton rounded" />
-                    </div>
-                    <div className="h-6 w-24 skeleton rounded-full" />
-                  </div>
-                ))}
-              </div>
+              [1, 2, 3].map((i) => (
+                <div key={i} className="h-24 rounded-xl border border-[var(--nimmit-border)] bg-[var(--nimmit-bg-secondary)] animate-pulse" />
+              ))
             ) : jobs.length === 0 ? (
               <EmptyState />
             ) : (
-              <div className="space-y-3">
-                {jobs.slice(0, 5).map((job, index) => (
-                  <JobCard key={job._id.toString()} job={job} index={index} />
-                ))}
-              </div>
+              jobs.slice(0, 5).map((job, index) => (
+                <JobCard key={job._id.toString()} job={job} index={index} />
+              ))
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Quick Tips */}
         {jobs.length > 0 && (
-          <div className="grid gap-4 md:grid-cols-2 animate-fade-up stagger-4">
+          <div className="grid gap-6 md:grid-cols-2 animate-fade-up stagger-4">
             <TipCard
               title="💡 Pro Tip"
               description="Submit tasks by 10 PM to get them completed overnight. Our team works while you sleep!"
@@ -211,21 +198,19 @@ function StatsCard({
   };
 
   return (
-    <Card className={`border-[var(--nimmit-border)] shadow-sm animate-fade-up stagger-${delay + 1}`}>
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardDescription className="text-sm font-medium text-[var(--nimmit-text-secondary)]">
-            {label}
-          </CardDescription>
-          <div className={`p-2 rounded-lg ${colorClasses[color].bg}`}>
-            <span className={colorClasses[color].text}>{icon}</span>
-          </div>
+    <div className={`p-6 rounded-[var(--nimmit-radius-2xl)] border border-[var(--nimmit-border)] bg-[var(--nimmit-bg-elevated)] shadow-soft-sm hover:shadow-soft-md transition-all duration-300 animate-fade-up stagger-${delay + 1}`}>
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-sm font-medium text-[var(--nimmit-text-secondary)]">
+          {label}
+        </span>
+        <div className={`p-2.5 rounded-[var(--nimmit-radius-lg)] ${colorClasses[color].bg}`}>
+          <span className={colorClasses[color].text}>{icon}</span>
         </div>
-        <CardTitle className="text-4xl font-display font-semibold text-[var(--nimmit-text-primary)]">
-          {value}
-        </CardTitle>
-      </CardHeader>
-    </Card>
+      </div>
+      <div className="text-4xl font-display font-semibold text-[var(--nimmit-text-primary)]">
+        {value}
+      </div>
+    </div>
   );
 }
 
@@ -237,40 +222,45 @@ function JobCard({ job, index }: { job: JobWithPopulated; index: number }) {
       className="block group"
     >
       <div
-        className={`flex items-center justify-between p-4 rounded-xl border border-[var(--nimmit-border)]
-                    bg-[var(--nimmit-bg-elevated)] hover:border-[var(--nimmit-accent-primary)]/30
-                    hover:shadow-md transition-all duration-200 animate-fade-up stagger-${index + 1}`}
+        className={`flex flex-col sm:flex-row sm:items-center justify-between p-6 rounded-[var(--nimmit-radius-xl)] 
+                    border border-[var(--nimmit-border)] bg-[var(--nimmit-bg-elevated)] 
+                    hover:border-[var(--nimmit-accent-primary)]/40 hover:bg-white
+                    hover:shadow-soft-md transition-all duration-300 animate-fade-up stagger-${index + 1}`}
       >
-        <div className="space-y-1 flex-1 min-w-0">
-          <p className="font-medium text-[var(--nimmit-text-primary)] truncate group-hover:text-[var(--nimmit-accent-primary)] transition-colors">
-            {job.title}
-          </p>
-          <p className="text-sm text-[var(--nimmit-text-secondary)]">
-            <span className="inline-flex items-center gap-1">
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
-              </svg>
+        <div className="space-y-1.5 flex-1 min-w-0 mb-4 sm:mb-0">
+          <div className="flex items-center gap-3">
+            <h3 className="font-semibold text-lg text-[var(--nimmit-text-primary)] group-hover:text-[var(--nimmit-accent-primary)] transition-colors line-clamp-1">
+              {job.title}
+            </h3>
+            {job.status === 'in_progress' && (
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--nimmit-accent-primary)] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[var(--nimmit-accent-primary)]"></span>
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 text-sm text-[var(--nimmit-text-secondary)]">
+            <Badge variant="soft" className="font-normal rounded-[var(--nimmit-radius-md)] px-2 h-6">
               {job.category}
-            </span>
-            <span className="mx-2 text-[var(--nimmit-text-tertiary)]">·</span>
-            <span className="inline-flex items-center gap-1">
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              {new Date(job.createdAt).toLocaleDateString()}
-            </span>
-          </p>
+            </Badge>
+            <span className="text-[var(--nimmit-text-tertiary)]">•</span>
+            <span>Created {new Date(job.createdAt).toLocaleDateString()}</span>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
+
+        <div className="flex items-center gap-4">
           <StatusBadge status={job.status} />
-          <svg
-            className="w-5 h-5 text-[var(--nimmit-text-tertiary)] group-hover:text-[var(--nimmit-accent-primary)] transition-colors"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
+          <div className="w-8 h-8 rounded-full flex items-center justify-center text-[var(--nimmit-text-tertiary)] group-hover:bg-[var(--nimmit-accent-primary)]/10 group-hover:text-[var(--nimmit-accent-primary)] transition-colors">
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
         </div>
       </div>
     </Link>
@@ -280,21 +270,21 @@ function JobCard({ job, index }: { job: JobWithPopulated; index: number }) {
 // Empty State Component
 function EmptyState() {
   return (
-    <div className="text-center py-12">
-      <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[var(--nimmit-accent-primary)]/10 flex items-center justify-center">
-        <svg className="w-8 h-8 text-[var(--nimmit-accent-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+    <div className="text-center py-16 px-6 rounded-[var(--nimmit-radius-2xl)] border-2 border-dashed border-[var(--nimmit-border)] bg-[var(--nimmit-bg-secondary)]/30">
+      <div className="w-20 h-20 mx-auto mb-6 rounded-[var(--nimmit-radius-xl)] bg-[var(--nimmit-bg-primary)] shadow-sm flex items-center justify-center">
+        <svg className="w-10 h-10 text-[var(--nimmit-text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
       </div>
-      <h3 className="text-lg font-medium text-[var(--nimmit-text-primary)] mb-2">
-        No tasks yet
+      <h3 className="text-xl font-display font-semibold text-[var(--nimmit-text-primary)] mb-2">
+        No active tasks
       </h3>
-      <p className="text-[var(--nimmit-text-secondary)] mb-6 max-w-sm mx-auto">
-        Submit your first task and our team will get started on it right away.
+      <p className="text-[var(--nimmit-text-secondary)] mb-8 max-w-md mx-auto">
+        Your dashboard is empty! Submit your first task now and our team will get started on it while you sleep.
       </p>
       <Link href="/client/jobs/new">
-        <Button className="bg-[var(--nimmit-accent-primary)] hover:bg-[var(--nimmit-accent-primary-hover)]">
-          Create Your First Task
+        <Button size="lg" className="px-8 shadow-soft-lg hover:shadow-soft-xl">
+          Create First Task
         </Button>
       </Link>
     </div>
@@ -312,23 +302,21 @@ function TipCard({
   action?: { label: string; href: string };
 }) {
   return (
-    <Card className="border-[var(--nimmit-border)] bg-[var(--nimmit-bg-secondary)]/50">
-      <CardContent className="p-5">
-        <h4 className="font-medium text-[var(--nimmit-text-primary)] mb-1">{title}</h4>
-        <p className="text-sm text-[var(--nimmit-text-secondary)]">{description}</p>
-        {action && (
-          <Link
-            href={action.href}
-            className="inline-flex items-center gap-1 mt-3 text-sm font-medium text-[var(--nimmit-accent-primary)] hover:underline"
-          >
-            {action.label}
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </Link>
-        )}
-      </CardContent>
-    </Card>
+    <div className="p-6 rounded-[var(--nimmit-radius-2xl)] border border-[var(--nimmit-border)] bg-[var(--nimmit-bg-tertiary)]/50">
+      <h4 className="font-semibold text-[var(--nimmit-text-primary)] mb-2">{title}</h4>
+      <p className="text-sm text-[var(--nimmit-text-secondary)] leading-relaxed">{description}</p>
+      {action && (
+        <Link
+          href={action.href}
+          className="inline-flex items-center gap-1 mt-4 text-sm font-medium text-[var(--nimmit-accent-primary)] hover:underline"
+        >
+          {action.label}
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </Link>
+      )}
+    </div>
   );
 }
 
@@ -336,11 +324,11 @@ function TipCard({
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { className: string; label: string }> = {
     pending: {
-      className: "bg-[var(--nimmit-warning-bg)] text-[var(--nimmit-warning)] border-[var(--nimmit-warning)]/20",
+      className: "bg-[var(--nimmit-warning)]/10 text-[var(--nimmit-warning)] border-[var(--nimmit-warning)]/20",
       label: "Pending",
     },
     assigned: {
-      className: "bg-[var(--nimmit-info-bg)] text-[var(--nimmit-info)] border-[var(--nimmit-info)]/20",
+      className: "bg-[var(--nimmit-info)]/10 text-[var(--nimmit-info)] border-[var(--nimmit-info)]/20",
       label: "Assigned",
     },
     in_progress: {
@@ -348,19 +336,19 @@ function StatusBadge({ status }: { status: string }) {
       label: "In Progress",
     },
     review: {
-      className: "bg-[var(--nimmit-info-bg)] text-[var(--nimmit-info)] border-[var(--nimmit-info)]/20",
+      className: "bg-[#8E24AA]/10 text-[#8E24AA] border-[#8E24AA]/20",
       label: "Ready for Review",
     },
     revision: {
-      className: "bg-[var(--nimmit-warning-bg)] text-[var(--nimmit-warning)] border-[var(--nimmit-warning)]/20",
+      className: "bg-[var(--nimmit-warning)]/10 text-[var(--nimmit-warning)] border-[var(--nimmit-warning)]/20",
       label: "Revision",
     },
     completed: {
-      className: "bg-[var(--nimmit-success-bg)] text-[var(--nimmit-success)] border-[var(--nimmit-success)]/20",
+      className: "bg-[var(--nimmit-success)]/10 text-[var(--nimmit-success)] border-[var(--nimmit-success)]/20",
       label: "Completed",
     },
     cancelled: {
-      className: "bg-[var(--nimmit-error-bg)] text-[var(--nimmit-error)] border-[var(--nimmit-error)]/20",
+      className: "bg-[var(--nimmit-error)]/10 text-[var(--nimmit-error)] border-[var(--nimmit-error)]/20",
       label: "Cancelled",
     },
   };
@@ -368,11 +356,10 @@ function StatusBadge({ status }: { status: string }) {
   const { className, label } = config[status] || config.pending;
 
   return (
-    <Badge
-      variant="outline"
-      className={`px-2.5 py-0.5 text-xs font-medium border rounded-full ${className}`}
+    <span
+      className={`inline-flex items-center px-3 py-1 text-xs font-semibold border rounded-full ${className}`}
     >
       {label}
-    </Badge>
+    </span>
   );
 }
