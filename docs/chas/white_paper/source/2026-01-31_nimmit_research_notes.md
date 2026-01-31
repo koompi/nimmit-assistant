@@ -104,11 +104,21 @@ Fault Tolerance: Multi-agent systems use "closed-loop reasoning" to provide faul
 
 # Tangentials to explore/short answer:
 
-What are some practical applications of the Agentic Economy?
+**1. What are some practical applications of the Agentic Economy?**
+- **Autonomous Customer Resolution**: Shifting from chatbots to agents that can issue refunds, reroute shipments, and solve complex billings without human input.
+- **Logistics & "Just-in-Time" Maintenence**: AI agents monitoring supply chain health and autonomously ordering maintenance or rerouting inventory weeks before a disruption.
+- **Micro-SaaS Production**: Non-blocking agents handling total software implementation workflows—writing tests, debugging, and generating documentation for weeks at a time.
+- **Autonomous Financial Trading**: Real-time arbitrage of micro-inefficiencies in hyper-local labor or resource markets.
 
-What role does IBM play in agentic AI and cloud infrastructure?
+**2. What role does IBM play in agentic AI and cloud infrastructure?**
+- **watsonx Platform**: Provides the governance and orchestration layer (watsonx.ai, watsonx.governance) for enterprise multi-agent systems.
+- **Hybrid Cloud Strategy**: Leveraging Red Hat OpenShift to ensure agentic AI is "AI-ready" and secure, especially for regulated industries (e.g., using IBM Z mainframes for AI workloads).
+- **Granite Models**: IBM’s open-source effort to provide transparent, governed models that enterprises can trust for strategic reasoning.
 
-What are some other challenges facing agentic AI?
+**3. What are some other challenges facing agentic AI?**
+- **Governance & Accountability**: The "Moral Crumple Zone"—who is responsible when an autonomous agent makes a biased or costly mistake?
+- **Security (The Digital Insider)**: Agents act as insiders with system privileges; if hijacked via prompt injection or memory poisoning, they can scale deception exponentially.
+- **Reliability & Hallucination**: Maintaining service-level objectives (SLOs) in black-box systems where a single hallucination in a multi-step plan can lead to cascading failures.
 
 
 
