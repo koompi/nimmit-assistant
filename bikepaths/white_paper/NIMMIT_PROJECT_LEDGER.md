@@ -59,6 +59,7 @@ This document serves as the central "Source of Truth" for the Nimmit platform ev
 
 | Date | Action | Description | Pointer |
 | :--- | :--- | :--- | :--- |
+| 2026-01-31 | **Article 4 PD** | [x] Track 12: Blog Production (Article 4) <!-- id: 63 --><br>    - [x] Draft Article 4 PD: "Piloting Your Pod" <!-- id: 64 --><br>    - [x] Perform style audit (Minimalist v4) <!-- id: 65 --><br>    - [x] Sync FD to repository <!-- id: 66 --> | `article_series/` |
 | 2026-01-31 | **Glossary Norm** | Standardized glossary style (Bold Title Case + Colon) across all articles. | `article_series/` |
 | 2026-01-31 | **WP Hardening** | Added Academic Anchors (Coase, Licklider, Wegner) and ESL Simplification. | v2_Finalized |
 | 2026-01-31 | **Glossary Init** | Created living glossary with simplified terminology. | `source/glossary.md` |
