@@ -6,9 +6,9 @@ For many solo founders and small business owners, the biggest wall is *time*. Yo
 
 At *Nimmit*, we are building a new way to work.
 
-We believe the solution is not just more people or simply AI. The answer is *AI-Powered Teams*. We are building a global talent hub that empowers high-skill human experts with advanced AI systems to help you scale instantly.
+We believe the solution is not just more people or simply AI. The answer is *ai-powered teams*. We are building a global talent hub that empowers high-skill human experts with advanced *artificial intelligence* systems to help you scale instantly.
 
-### Why This Matters
+### why this matters
 
 Instead of just outsourcing or using a bot, Nimmit provides you with a *virtual pod*. This is a team of talented human orchestrators, many working from our rising tech hubs in Cambodia who use our *context cloud* to learn your brand and execute your work with precision.
 
