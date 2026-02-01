@@ -41,6 +41,6 @@ Now that you have a system that remembers, you need to know how to lead it. In o
 
 ### Glossary Check
 
-**context cloud** A digital intelligence system that stores and organizes a business owner's rules, style, and history to allow teams to work with high accuracy.
+**Context Cloud**: A digital intelligence system that stores and organizes a business owner's rules, style, and history to allow teams to work with high accuracy.
 
-**virtual pod** A small, high-skill team of human orchestrators and systems that work together to execute a specific business function.
+**Virtual Pod**: A small, high-skill team of human orchestrators and systems that work together to execute a specific business function.

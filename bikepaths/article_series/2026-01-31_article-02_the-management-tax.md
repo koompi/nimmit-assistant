@@ -40,6 +40,6 @@ The future belongs to those who own their systems, not those who manage people.
 
 ### Glossary Check
 
-**transaction costs** The time and effort spent to coordinate, communicate, and manage a task, separate from the actual work itself.
+**Transaction Costs**: The time and effort spent to coordinate, communicate, and manage a task, separate from the actual work itself.
 
-**management tax** The hidden costs of hiring and managing employees, including communication overhead, training time, and the cost of mistakes.
+**Management Tax**: The hidden costs of hiring and managing employees, including communication overhead, training time, and the cost of mistakes.
