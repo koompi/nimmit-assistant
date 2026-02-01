@@ -13,6 +13,12 @@ This document serves as the central "Source of Truth" for the Nimmit platform ev
 > [!IMPORTANT]
 > **Dynamic Development**: All project documents (White Paper, Blog Series, and Notes) are **Dynamic Drafts**. As we gather new notes and synthesize big ideas, they are continuously incorporated into all core documents. Everything is evolving in real-time.
 
+> [!NOTE]
+> **Style Protocol (Italicized Minimalist)**:
+> - **Header Level**: Use `###` for primary article titles to maintain a pedagogical, non-aggressive hierarchy.
+> - **Emphasis**: Use *italics* for conceptual terms (e.g., *friction trap*, *transaction costs*) to encourage absorption over scanning.
+> - **Tone**: "Academic-Lite" Pedagogy. Neutralize marketing-speak. Prefer lowercase terms of art to avoid forced branding.
+
 ---
 
 ## 2. Infrastructure & Architecture Map
@@ -53,5 +59,7 @@ This document serves as the central "Source of Truth" for the Nimmit platform ev
 | 2026-01-31| **Protocol Set** | Hardcoded date slugging and symlink recognition rules. | `htmly/system/` |
 | 2026-01-31 | **Foundation Notes** | Standardized `reandom-noetes.md` into `2026-01-31_nimmit_research_notes.md`. | `source/research/` |
 | 2026-01-31 | **Ledger Update** | Formalized Publication Strategy and Dynamic Draft status. | `NIMMIT_PROJECT_LEDGER.md` |
+| 2026-01-31 | **Style Codified** | Established "Italicized Minimalist" formatting protocol (Italics/Pedagogy). | `NIMMIT_PROJECT_LEDGER.md` |
+| 2026-01-31 | **Article 1 Final** | Finalized Title and Tone adjustments based on user feedback. | `article_series/` |
 | 2026-01-31 | **Article 1 PD** | Drafted "The New Way to Work" (Micro-Entity introduction). | `article_series/` |
 | 2026-01-31 | **Ledger Genesis** | Initialized this Project Ledger for permanent tracking. | `NIMMIT_PROJECT_LEDGER.md` |

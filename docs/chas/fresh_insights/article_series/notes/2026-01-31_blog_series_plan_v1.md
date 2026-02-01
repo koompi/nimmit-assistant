@@ -1,7 +1,11 @@
 # Blog Series Outline: The Future of Solo Work
 
 **Target Audience**: Young, culturally diverse Asian population (ESL).
-**Tone**: Simple, encouraging, and tech-forward.
+**Tone**: Simple, encouraging, and "Academic-Lite" Pedagogy (Minimalist).
+**Formatting Protocol**:
+- Use `###` for all Article Headers.
+- Use *italics* for terms of art (e.g., *transaction costs*).
+- Disable **bolding** of bodies to improve long-form readability.
 **Core Objective**: Translate the Nimmit White Paper into actionable, digestible blog content.
 
 ---
