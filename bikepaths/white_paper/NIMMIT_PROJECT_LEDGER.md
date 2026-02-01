@@ -18,6 +18,7 @@ This document serves as the central "Source of Truth" for the Nimmit platform ev
 > - **Header Level**: Title Case for `###` headers.
 > - **Emphasis**: *Italics* for mid-sentence conceptual terms (ESL special meaning signal).
 > - **List Anchors**: **Bold and Title Case** for the lead term in any list (e.g., **1. Infinite Capacity**).
+> - **Glossary Style**: **Bold Title Case**: followed by the definition (e.g., **Micro-Entity**: Definition).
 > - **Semantic Rule**: Use skill-based verbs (*precision*, *orchestration*, *judgment*). Avoid machine language (*automation*, *bots*).
 > - **Zero Quotation**: No quotation marks. Ever.
 > - **Body Bolding**: None allowed in standard paragraphs.
@@ -58,6 +59,7 @@ This document serves as the central "Source of Truth" for the Nimmit platform ev
 
 | Date | Action | Description | Pointer |
 | :--- | :--- | :--- | :--- |
+| 2026-01-31 | **Glossary Norm** | Standardized glossary style (Bold Title Case + Colon) across all articles. | `article_series/` |
 | 2026-01-31 | **WP Hardening** | Added Academic Anchors (Coase, Licklider, Wegner) and ESL Simplification. | v2_Finalized |
 | 2026-01-31 | **Glossary Init** | Created living glossary with simplified terminology. | `source/glossary.md` |
 | 2026-01-31 | **Blog Series** | Approved 6-part "Future of Solo Work" outline. | `article_series/notes/` |
