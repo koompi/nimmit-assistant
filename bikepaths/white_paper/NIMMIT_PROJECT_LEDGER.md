@@ -28,7 +28,8 @@ This document serves as the central "Source of Truth" for the Nimmit platform ev
 ### Access Points (Local Workspace)
 - **Consolidated Nimmit Hub**: `/home/user0/files/workspace/inbox/nimmit`
 - **White Paper Sub-Path**: `/home/user0/files/workspace/inbox/nimmit/white_paper`
-- **Insights & Blog Sub-Path**: `/home/user0/files/workspace/inbox/nimmit/fresh_insights`
+- **Article Series Sub-Path**: `/home/user0/files/workspace/inbox/nimmit/article_series`
+- **Archive Sub-Path**: `/home/user0/files/workspace/inbox/nimmit/archive`
 - **External Protocol**: `/home/user0/files/workspace/htmly/system/external_communication_protocol.md`
 
 ### Publication Strategy (Series Lock)
@@ -39,7 +40,8 @@ This document serves as the central "Source of Truth" for the Nimmit platform ev
 - **Base Directory**: `/home/user0/git/nimmit`
 - **Top-Level Content Path**: `bikepaths/`
 - **White Paper Path**: `bikepaths/white_paper/`
-- **Insights Path**: `bikepaths/fresh_insights/`
+- **Article Series Path**: `bikepaths/article_series/`
+- **Archive Path**: `bikepaths/archive/`
 
 ---
 
@@ -47,7 +49,7 @@ This document serves as the central "Source of Truth" for the Nimmit platform ev
 - **Final WP Draft**: [Nimmit_Whitepaper_v2_Simplification_Draft.md](file:///home/user0/files/workspace/inbox/nimmit/white_paper/Nimmit_Whitepaper_v2_Simplification_Draft.md)
 - **Living Glossary**: [glossary.md](file:///home/user0/files/workspace/inbox/nimmit/white_paper/source/glossary.md)
 - **Foundation Research**: [2026-01-31_nimmit_research_notes.md](file:///home/user0/files/workspace/inbox/nimmit/white_paper/source/2026-01-31_nimmit_research_notes.md)
-- **Blog Series Plan**: [2026-01-31_blog_series_plan_v1.md](file:///home/user0/files/workspace/inbox/nimmit/fresh_insights/article_series/notes/2026-01-31_blog_series_plan_v1.md)
+- **Blog Series Plan**: [2026-01-31_blog_series_plan_v1.md](file:///home/user0/files/workspace/inbox/nimmit/article_series/notes/2026-01-31_blog_series_plan_v1.md)
 
 ---
 
