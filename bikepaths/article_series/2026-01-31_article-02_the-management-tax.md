@@ -42,4 +42,4 @@ The future belongs to those who own their systems, not those who manage people.
 
 **Transaction Costs**: The time and effort spent to coordinate, communicate, and manage a task, separate from the actual work itself.
 
-**Management Tax**: The hidden costs of hiring and managing employees, including communication overhead, training time, and the cost of mistakes.
+**Friction**: The resistance or loss of momentum caused by inefficient communication, misaligned context, and the overhead of managing people instead of leadings systems.
