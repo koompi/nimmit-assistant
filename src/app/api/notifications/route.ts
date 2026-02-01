@@ -30,8 +30,8 @@ export async function GET(request: NextRequest) {
     const unreadOnly = searchParams.get('unreadOnly') === 'true';
     const limit = parseInt(searchParams.get('limit') || '50', 10);
 
-    const notifications = getNotifications(session.user.id, { unreadOnly, limit });
-    const unreadCount = getUnreadCount(session.user.id);
+    const notifications = await getNotifications(session.user.id, { unreadOnly, limit });
+    const unreadCount = await getUnreadCount(session.user.id);
 
     return NextResponse.json({
       success: true,
@@ -78,7 +78,7 @@ export async function PATCH(request: NextRequest) {
     const { notificationId, markAll } = body;
 
     if (markAll) {
-      const count = markAllAsRead(session.user.id);
+      const count = await markAllAsRead(session.user.id);
       return NextResponse.json({
         success: true,
         data: { markedCount: count },
@@ -87,7 +87,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     if (notificationId) {
-      const success = markAsRead(session.user.id, notificationId);
+      const success = await markAsRead(session.user.id, notificationId);
       if (!success) {
         return NextResponse.json(
           { success: false, error: { code: 'NOT_FOUND', message: 'Notification not found' } },

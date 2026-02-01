@@ -3,14 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     Select,
     SelectContent,
@@ -34,7 +28,7 @@ interface JobWithPopulated extends Omit<Job, "clientId" | "workerId"> {
 }
 
 const STATUS_OPTIONS = [
-    { value: "all", label: "All Jobs", icon: "📋" },
+    { value: "all", label: "Filter: All", icon: "📋" },
     { value: "pending", label: "Unassigned", icon: "⏳" },
     { value: "assigned", label: "Assigned", icon: "👤" },
     { value: "in_progress", label: "In Progress", icon: "🔄" },
@@ -49,12 +43,12 @@ export default function AdminJobsPage() {
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState<string>("all");
 
+    // Fetch all jobs initially to allow fast tab switching
     useEffect(() => {
         async function fetchJobs() {
             setLoading(true);
             try {
-                const url = statusFilter === "all" ? "/api/jobs" : `/api/jobs?status=${statusFilter}`;
-                const response = await fetch(url);
+                const response = await fetch("/api/jobs");
                 const data = await response.json();
                 if (data.success) {
                     setJobs(data.data.jobs);
@@ -66,235 +60,229 @@ export default function AdminJobsPage() {
             }
         }
         fetchJobs();
-    }, [statusFilter]);
+    }, []);
 
+    // Derived Lists
     const pendingJobs = jobs.filter((j) => j.status === "pending");
     const activeJobs = jobs.filter((j) => ["assigned", "in_progress", "review", "revision"].includes(j.status));
     const completedJobs = jobs.filter((j) => j.status === "completed");
-    const cancelledJobs = jobs.filter((j) => j.status === "cancelled");
+
+    // "All Jobs" Tab - Filtered by the dropdown
+    const filteredAllJobs = statusFilter === "all"
+        ? jobs
+        : jobs.filter(j => j.status === statusFilter);
 
     return (
-        <div className="min-h-screen bg-[var(--nimmit-bg-primary)]">
-            <div className="max-w-7xl mx-auto px-6 py-10 space-y-8">
-                {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fade-up">
-                    <div>
-                        <h1 className="text-3xl md:text-4xl font-display font-semibold tracking-tight text-[var(--nimmit-text-primary)]">
-                            All Jobs
-                        </h1>
-                        <p className="text-[var(--nimmit-text-secondary)] mt-2">
-                            Manage and assign all jobs in the system
-                        </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <Select value={statusFilter} onValueChange={setStatusFilter}>
-                            <SelectTrigger className="w-[180px] bg-[var(--nimmit-bg-elevated)] border-[var(--nimmit-border)]">
-                                <SelectValue placeholder="Filter" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-[var(--nimmit-bg-elevated)] border-[var(--nimmit-border)]">
-                                {STATUS_OPTIONS.map((option) => (
-                                    <SelectItem key={option.value} value={option.value}>
-                                        <span className="flex items-center gap-2">
-                                            <span>{option.icon}</span>
-                                            <span>{option.label}</span>
-                                        </span>
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        {statusFilter !== "all" && (
-                            <Button variant="ghost" size="sm" onClick={() => setStatusFilter("all")}>Clear</Button>
-                        )}
-                    </div>
+        <div className="space-y-4">
+            {/* Page Header */}
+            <div className="flex items-center justify-between pb-2">
+                <div>
+                    <h1 className="text-2xl font-display font-medium text-[var(--nimmit-text-primary)] tracking-tight">
+                        Jobs Management
+                    </h1>
+                    <p className="text-sm text-[var(--nimmit-text-tertiary)] mt-1">
+                        Track, assign, and review all tasks across the platform
+                    </p>
                 </div>
+                {/* Global Status Filter - Primarily useful for the "All Jobs" tab */}
+                <div className="flex items-center gap-2">
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger className="w-[180px] h-10 rounded-full border-gray-200 bg-white shadow-sm">
+                            <SelectValue placeholder="Filter Status" />
+                        </SelectTrigger>
+                        <SelectContent align="end">
+                            {STATUS_OPTIONS.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                    <span className="flex items-center gap-2">
+                                        <span>{option.icon}</span>
+                                        <span>{option.label}</span>
+                                    </span>
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
 
-                {/* Unassigned Queue - Priority */}
-                {pendingJobs.length > 0 && (
-                    <Card className="border-[var(--nimmit-warning)]/50 bg-[var(--nimmit-warning-bg)]/30 shadow-sm animate-fade-up stagger-1">
-                        <CardHeader className="pb-4">
-                            <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-[var(--nimmit-warning)] animate-pulse" />
-                                <CardTitle className="text-lg font-display text-[var(--nimmit-warning)]">
-                                    Unassigned ({pendingJobs.length})
-                                </CardTitle>
-                            </div>
-                            <CardDescription>Jobs waiting to be assigned to a team member</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-3">
-                                {pendingJobs.map((job, i) => (
-                                    <JobCard key={job._id.toString()} job={job} index={i} urgent />
-                                ))}
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
+            {/* Main Floating Panel with Tabs */}
+            <div className="bg-white rounded-[24px] shadow-sm border border-gray-200/60 overflow-hidden min-h-[600px] flex flex-col">
+                <Tabs defaultValue="active" className="w-full flex flex-col flex-1">
 
-                {/* Active Jobs */}
-                <Card className="border-[var(--nimmit-border)] shadow-sm animate-fade-up stagger-2">
-                    <CardHeader className="pb-4">
-                        <CardTitle className="text-lg font-display">Active Jobs ({activeJobs.length})</CardTitle>
-                        <CardDescription>Jobs currently being worked on</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        {loading ? (
-                            <SkeletonList />
-                        ) : activeJobs.length === 0 ? (
-                            <EmptyState message="No active jobs" />
-                        ) : (
-                            <div className="space-y-3">
-                                {activeJobs.map((job, i) => (
-                                    <JobCard key={job._id.toString()} job={job} index={i} />
-                                ))}
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
+                    {/* Tabs Header */}
+                    <div className="px-6 py-2 border-b border-gray-100 bg-gray-50/30 flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <TabsList className="bg-transparent p-0 h-auto gap-2">
+                            <TabsTrigger value="active" className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-full px-4 py-2 border border-transparent data-[state=active]:border-gray-200 transition-all">
+                                Active <Badge variant="secondary" className="ml-2 bg-blue-100 text-blue-700 hover:bg-blue-100">{activeJobs.length}</Badge>
+                            </TabsTrigger>
 
-                {/* Completed */}
-                {completedJobs.length > 0 && (
-                    <Card className="border-[var(--nimmit-success)]/30 shadow-sm animate-fade-up stagger-3">
-                        <CardHeader className="pb-4">
-                            <CardTitle className="text-lg font-display text-[var(--nimmit-success)]">
-                                Completed ({completedJobs.length})
-                            </CardTitle>
-                            <CardDescription>Successfully delivered jobs</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-3">
-                                {completedJobs.slice(0, 10).map((job, i) => (
-                                    <JobCard key={job._id.toString()} job={job} index={i} />
-                                ))}
-                                {completedJobs.length > 10 && (
-                                    <p className="text-center text-sm text-[var(--nimmit-text-tertiary)] pt-2">
-                                        Showing 10 of {completedJobs.length} completed jobs
-                                    </p>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
+                            <TabsTrigger value="pending" className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-full px-4 py-2 border border-transparent data-[state=active]:border-gray-200 transition-all relative">
+                                Unassigned
+                                {pendingJobs.length > 0 && <Badge className="ml-2 bg-amber-500 hover:bg-amber-600 border-none text-white">{pendingJobs.length}</Badge>}
+                            </TabsTrigger>
 
-                {/* Cancelled */}
-                {cancelledJobs.length > 0 && (
-                    <Card className="border-[var(--nimmit-border)] shadow-sm animate-fade-up stagger-4">
-                        <CardHeader className="pb-4">
-                            <CardTitle className="text-lg font-display text-[var(--nimmit-text-tertiary)]">
-                                Cancelled ({cancelledJobs.length})
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-3">
-                                {cancelledJobs.slice(0, 5).map((job, i) => (
-                                    <JobCard key={job._id.toString()} job={job} index={i} />
-                                ))}
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
+                            <TabsTrigger value="completed" className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-full px-4 py-2 border border-transparent data-[state=active]:border-gray-200 transition-all">
+                                Completed <span className="ml-2 text-xs text-gray-500 font-normal">({completedJobs.length})</span>
+                            </TabsTrigger>
+
+                            <TabsTrigger value="all" className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-full px-4 py-2 border border-transparent data-[state=active]:border-gray-200 transition-all">
+                                All Jobs
+                            </TabsTrigger>
+                        </TabsList>
+                    </div>
+
+                    {/* Content Area */}
+                    <div className="flex-1 bg-white">
+                        {/* Active Jobs Tab */}
+                        <TabsContent value="active" className="m-0 h-full">
+                            <JobList jobs={activeJobs} loading={loading} emptyMessage="No active jobs at the moment." />
+                        </TabsContent>
+
+                        {/* Unassigned Tab */}
+                        <TabsContent value="pending" className="m-0 h-full">
+                            {pendingJobs.length > 0 && (
+                                <div className="px-6 py-3 bg-amber-50 border-b border-amber-100 text-amber-800 text-sm flex items-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                                    <strong>Action Required:</strong> These jobs need to be assigned to a worker.
+                                </div>
+                            )}
+                            <JobList jobs={pendingJobs} loading={loading} emptyMessage="All jobs satisfy sorting! No unassigned tasks." urgent />
+                        </TabsContent>
+
+                        {/* Completed Tab */}
+                        <TabsContent value="completed" className="m-0 h-full">
+                            <JobList jobs={completedJobs} loading={loading} emptyMessage="No completed jobs yet." />
+                        </TabsContent>
+
+                        {/* All Jobs Tab */}
+                        <TabsContent value="all" className="m-0 h-full">
+                            {statusFilter !== "all" && (
+                                <div className="px-6 py-3 bg-gray-50 border-b border-gray-100 text-gray-500 text-sm">
+                                    Filtering view by: <span className="font-medium text-gray-900">{STATUS_OPTIONS.find(o => o.value === statusFilter)?.label}</span>
+                                </div>
+                            )}
+                            <JobList jobs={filteredAllJobs} loading={loading} emptyMessage="No jobs found matching the filter." />
+                        </TabsContent>
+                    </div>
+                </Tabs>
             </div>
         </div>
     );
 }
 
-// Job Card
-function JobCard({ job, index, urgent }: { job: JobWithPopulated; index: number; urgent?: boolean }) {
+// Reusable List Component
+function JobList({ jobs, loading, emptyMessage, urgent }: { jobs: JobWithPopulated[]; loading: boolean; emptyMessage: string; urgent?: boolean }) {
+    if (loading) return (
+        <div className="divide-y divide-gray-100">
+            <SkeletonRows count={5} />
+        </div>
+    );
+
+    if (jobs.length === 0) return (
+        <EmptyRow message={emptyMessage} />
+    );
+
     return (
-        <Link href={`/admin/jobs/${job._id}`} className="block group">
-            <div
-                className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-200
-                    ${urgent
-                        ? "border-[var(--nimmit-warning)]/30 bg-white hover:border-[var(--nimmit-warning)]/50"
-                        : "border-[var(--nimmit-border)] bg-[var(--nimmit-bg-elevated)] hover:border-[var(--nimmit-accent-primary)]/30"}
-                    hover:shadow-md`}
-                style={{ animationDelay: `${index * 50}ms` }}
-            >
-                <div className="space-y-1 flex-1 min-w-0">
-                    <p className="font-medium text-[var(--nimmit-text-primary)] truncate group-hover:text-[var(--nimmit-accent-primary)] transition-colors">
-                        {job.title}
-                    </p>
-                    <p className="text-sm text-[var(--nimmit-text-secondary)] flex flex-wrap items-center gap-x-2">
-                        <span className="inline-flex items-center gap-1">
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                            {job.clientId.profile.firstName} {job.clientId.profile.lastName}
-                        </span>
-                        <span className="text-[var(--nimmit-text-tertiary)]">·</span>
-                        <span>{job.category}</span>
-                        <span className="text-[var(--nimmit-text-tertiary)]">·</span>
-                        <span>{new Date(job.createdAt).toLocaleDateString()}</span>
-                        {job.workerId && (
-                            <>
-                                <span className="text-[var(--nimmit-text-tertiary)]">·</span>
-                                <span className="text-[var(--nimmit-accent-primary)]">→ {job.workerId.profile.firstName}</span>
-                            </>
-                        )}
-                    </p>
+        <div className="divide-y divide-gray-100">
+            {jobs.map((job) => (
+                <JobRow key={job._id.toString()} job={job} urgent={urgent} />
+            ))}
+        </div>
+    );
+}
+
+// Dense Job Row
+function JobRow({ job, urgent }: { job: JobWithPopulated; urgent?: boolean }) {
+    return (
+        <Link href={`/admin/jobs/${job._id}`} className={`block hover:bg-gray-50 transition-colors group ${urgent ? "bg-amber-50/30 hover:bg-amber-50/60" : ""}`}>
+            <div className="flex items-center justify-between px-6 py-4">
+                <div className="flex items-start gap-4 min-w-0 flex-1">
+                    {/* Icon Avatar */}
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${urgent ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600'}`}>
+                        {job.title.charAt(0)}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-3 mb-1">
+                            <p className="text-sm font-medium text-gray-900 truncate group-hover:text-blue-600 transition-colors">{job.title}</p>
+                            {urgent && <Badge variant="outline" className="border-amber-200 text-amber-700 text-[10px] h-5">Unassigned</Badge>}
+                        </div>
+
+                        <div className="flex items-center gap-3 text-xs text-gray-500">
+                            <span className="flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span>
+                                {job.category}
+                            </span>
+                            <span className="text-gray-300">|</span>
+                            <span>Client: <span className="text-gray-700">{job.clientId.profile.firstName} {job.clientId.profile.lastName}</span></span>
+                            {job.workerId && (
+                                <>
+                                    <span className="text-gray-300">|</span>
+                                    <span>Worker: <span className="text-blue-600 font-medium">{job.workerId.profile.firstName}</span></span>
+                                </>
+                            )}
+                            <span className="text-gray-300">|</span>
+                            <span>{new Date(job.createdAt).toLocaleDateString()}</span>
+                        </div>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2 ml-4">
+                <div className="flex items-center gap-3 shrink-0">
                     {job.priority !== "standard" && <PriorityBadge priority={job.priority} />}
                     <StatusBadge status={job.status} />
-                    <svg className="w-5 h-5 text-[var(--nimmit-text-tertiary)] group-hover:text-[var(--nimmit-accent-primary)] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
+                    <div className="text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                    </div>
                 </div>
             </div>
         </Link>
     );
 }
 
-// Empty State
-function EmptyState({ message }: { message: string }) {
+// Empty Row
+function EmptyRow({ message }: { message: string }) {
     return (
-        <div className="text-center py-10">
-            <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-[var(--nimmit-bg-secondary)] flex items-center justify-center">
-                <svg className="w-7 h-7 text-[var(--nimmit-text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-            </div>
-            <p className="text-[var(--nimmit-text-secondary)]">{message}</p>
+        <div className="px-6 py-12 text-center">
+            <div className="w-12 h-12 mx-auto mb-3 bg-gray-50 rounded-full flex items-center justify-center text-2xl">🍃</div>
+            <p className="text-sm text-gray-500">{message}</p>
         </div>
     );
 }
 
-// Skeleton List
-function SkeletonList() {
+// Skeleton Rows
+function SkeletonRows({ count }: { count: number }) {
     return (
-        <div className="space-y-3">
-            {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="flex items-center justify-between p-4 rounded-xl border border-[var(--nimmit-border)]">
-                    <div className="space-y-2 flex-1">
-                        <div className="h-5 w-64 skeleton rounded" />
-                        <div className="h-4 w-48 skeleton rounded" />
+        <>
+            {Array.from({ length: count }).map((_, i) => (
+                <div key={i} className="flex items-center justify-between px-6 py-4">
+                    <div className="flex-1 space-y-2">
+                        <div className="h-4 w-48 bg-gray-100 rounded animate-pulse" />
+                        <div className="h-3 w-32 bg-gray-50 rounded animate-pulse" />
                     </div>
-                    <div className="h-6 w-24 skeleton rounded-full" />
+                    <div className="h-6 w-20 bg-gray-100 rounded-full animate-pulse" />
                 </div>
             ))}
-        </div>
+        </>
     );
 }
 
-// Status Badge
+// Status Badge - Refined for White Panel
 function StatusBadge({ status }: { status: string }) {
     const config: Record<string, { className: string; label: string }> = {
-        pending: { className: "bg-[var(--nimmit-warning-bg)] text-[var(--nimmit-warning)] border-[var(--nimmit-warning)]/20", label: "Unassigned" },
-        assigned: { className: "bg-[var(--nimmit-info-bg)] text-[var(--nimmit-info)] border-[var(--nimmit-info)]/20", label: "Assigned" },
-        in_progress: { className: "bg-[var(--nimmit-accent-primary)]/10 text-[var(--nimmit-accent-primary)] border-[var(--nimmit-accent-primary)]/20", label: "In Progress" },
-        review: { className: "bg-[var(--nimmit-info-bg)] text-[var(--nimmit-info)] border-[var(--nimmit-info)]/20", label: "In Review" },
-        revision: { className: "bg-[var(--nimmit-error-bg)] text-[var(--nimmit-error)] border-[var(--nimmit-error)]/20", label: "Revision" },
-        completed: { className: "bg-[var(--nimmit-success-bg)] text-[var(--nimmit-success)] border-[var(--nimmit-success)]/20", label: "Completed" },
-        cancelled: { className: "bg-[var(--nimmit-bg-secondary)] text-[var(--nimmit-text-tertiary)] border-[var(--nimmit-border)]", label: "Cancelled" },
+        pending: { className: "bg-gray-100 text-gray-600", label: "Unassigned" },
+        assigned: { className: "bg-blue-50 text-blue-600", label: "Assigned" },
+        in_progress: { className: "bg-blue-100 text-blue-700", label: "In Progress" },
+        review: { className: "bg-purple-50 text-purple-600", label: "Review" },
+        revision: { className: "bg-amber-50 text-amber-600", label: "Revision" },
+        completed: { className: "bg-green-50 text-green-700", label: "Done" },
+        cancelled: { className: "bg-gray-50 text-gray-400 decoration-slice line-through", label: "Cancelled" },
     };
     const { className, label } = config[status] || config.pending;
-    return <Badge variant="outline" className={`px-2.5 py-0.5 text-xs font-medium border rounded-full ${className}`}>{label}</Badge>;
+    return <span className={`px-2.5 py-1 text-[11px] font-medium rounded-full ${className}`}>{label}</span>;
 }
 
-// Priority Badge
 function PriorityBadge({ priority }: { priority: string }) {
-    const config: Record<string, { className: string }> = {
-        rush: { className: "bg-[var(--nimmit-error)]/10 text-[var(--nimmit-error)] border-[var(--nimmit-error)]/20" },
-        express: { className: "bg-[var(--nimmit-warning-bg)] text-[var(--nimmit-warning)] border-[var(--nimmit-warning)]/20" },
+    const config: Record<string, string> = {
+        rush: "bg-red-50 text-red-600 border border-red-100",
+        express: "bg-amber-50 text-amber-600 border border-amber-100",
     };
-    return <Badge variant="outline" className={`px-2 py-0.5 text-xs border rounded-full ${config[priority]?.className}`}>{priority}</Badge>;
+    return <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full ${config[priority]}`}>{priority}</span>;
 }

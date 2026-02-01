@@ -4,14 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import type { Job } from "@/types";
 
 interface JobWithPopulated extends Omit<Job, "clientId"> {
@@ -59,263 +53,215 @@ export default function WorkerDashboard() {
   const firstName = session?.user?.name?.split(" ")[0] || "there";
 
   return (
-    <div className="min-h-screen bg-[var(--nimmit-bg-primary)]">
-      <div className="max-w-6xl mx-auto px-6 py-10 space-y-8">
-        {/* Welcome Section */}
-        <div className="animate-fade-up">
-          <h1 className="text-3xl md:text-4xl font-display font-semibold tracking-tight text-[var(--nimmit-text-primary)]">
-            Welcome, {firstName}!
+    <div className="space-y-6">
+      {/* Header - Transparent on the tinted background */}
+      <div className="flex items-center justify-between pb-2">
+        <div>
+          <h1 className="text-2xl font-display font-medium text-[var(--nimmit-text-primary)] tracking-tight">
+            Worker Dashboard
           </h1>
-          <p className="text-[var(--nimmit-text-secondary)] mt-2 text-lg">
-            Here&apos;s your current workload overview.
+          <p className="text-sm text-[var(--nimmit-text-tertiary)] mt-1">
+            Manage your assignments and track your earnings
           </p>
         </div>
+        {/* Quick Action? */}
+      </div>
 
-        {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-4">
-          <StatsCard
-            label="Current Jobs"
-            value={activeJobs.length}
-            icon={<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />}
-            color="primary"
-            delay={0}
-          />
-          <StatsCard
-            label="Awaiting Review"
-            value={inReview.length}
-            icon={<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />}
-            color="info"
-            delay={1}
-          />
-          <StatsCard
-            label="This Week"
-            value={completedThisWeek.length}
-            icon={<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />}
-            color="success"
-            delay={2}
-          />
-          <StatsCard
-            label="Total Completed"
-            value={totalCompleted}
-            icon={<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />}
-            color="tertiary"
-            delay={3}
-          />
+      {/* Main Floating Panel */}
+      <div className="bg-white rounded-[24px] shadow-sm border border-gray-200/60 overflow-hidden min-h-[600px] flex flex-col">
+
+        {/* Panel Header with Stats */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <div className="flex items-center gap-6">
+            <h2 className="text-base font-medium text-gray-900">My Workspace</h2>
+            <div className="h-4 w-px bg-gray-200"></div>
+            <div className="flex gap-4">
+              <div className="flex flex-col">
+                <span className="text-xs text-gray-500 uppercase tracking-wide font-medium">Assigned</span>
+                <span className="text-lg font-semibold text-gray-900 leading-none">{activeJobs.length}</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs text-gray-500 uppercase tracking-wide font-medium">Review</span>
+                <span className="text-lg font-semibold text-gray-900 leading-none">{inReview.length}</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs text-gray-500 uppercase tracking-wide font-medium">Done (W)</span>
+                <span className="text-lg font-semibold text-green-600 leading-none">{completedThisWeek.length}</span>
+              </div>
+            </div>
+          </div>
+          <Link href="/worker/jobs">
+            <Button variant="ghost" size="sm" className="h-8 rounded-full text-xs text-blue-600 hover:bg-blue-50">
+              View All Jobs →
+            </Button>
+          </Link>
         </div>
 
-        {/* Current Assignments */}
-        <Card className="border-[var(--nimmit-border)] shadow-sm animate-fade-up stagger-4">
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-xl font-display">Current Assignments</CardTitle>
-                <CardDescription className="text-[var(--nimmit-text-secondary)]">
-                  Jobs you&apos;re working on
-                </CardDescription>
-              </div>
-              <Link href="/worker/jobs">
-                <Button variant="outline" size="sm" className="border-[var(--nimmit-border)] hover:bg-[var(--nimmit-bg-secondary)]">
-                  View All Jobs
-                </Button>
-              </Link>
+        {/* Content Area - Split View or unified list */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-gray-100 flex-1">
+
+          {/* Left: Active Assignments */}
+          <div className="flex flex-col">
+            <div className="px-6 py-3 bg-gray-50/50 border-b border-gray-100 flex justify-between items-center">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase">Active Priority</h3>
             </div>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex items-center justify-between p-4 rounded-xl border border-[var(--nimmit-border)]">
-                    <div className="space-y-2 flex-1">
-                      <div className="h-5 w-64 skeleton rounded" />
-                      <div className="h-4 w-48 skeleton rounded" />
-                    </div>
-                    <div className="h-6 w-24 skeleton rounded-full" />
+            <div className="flex-1 p-2 space-y-2">
+              {loading ? <SkeletonRows count={3} /> : activeJobs.length === 0 ? (
+                <div className="py-12 text-center text-gray-400 text-sm">No active assignments. Relax! 🌴</div>
+              ) : activeJobs.map(job => (
+                <Link key={job._id.toString()} href={`/worker/jobs/${job._id}`} className="block p-3 rounded-xl hover:bg-blue-50/50 border border-transparent hover:border-blue-100 transition-all group">
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">{job.title}</span>
+                    {job.priority !== 'standard' && <PriorityBadge priority={job.priority} />}
                   </div>
-                ))}
-              </div>
-            ) : activeJobs.length === 0 ? (
-              <EmptyState
-                icon={<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />}
-                title="No active assignments"
-                description="Check back soon for new jobs!"
-              />
-            ) : (
-              <div className="space-y-3">
-                {activeJobs.map((job, index) => (
-                  <JobCard key={job._id.toString()} job={job} index={index} />
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                    <span>{job.clientId.profile.firstName}</span>
+                    <span>•</span>
+                    <span>{job.category}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <StatusBadge status={job.status} />
+                    <span className="text-[10px] text-gray-400 font-mono">{new Date(job.createdAt).toLocaleDateString()}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
 
-        {/* In Review */}
-        {inReview.length > 0 && (
-          <Card className="border-[var(--nimmit-info)]/30 bg-[var(--nimmit-info-bg)]/30 shadow-sm animate-fade-up stagger-5">
-            <CardHeader className="pb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-[var(--nimmit-info)]/20 flex items-center justify-center">
-                  <svg className="w-4 h-4 text-[var(--nimmit-info)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <CardTitle className="text-lg font-display">Awaiting Client Review</CardTitle>
-                  <CardDescription>Jobs you&apos;ve submitted for review</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {inReview.map((job) => (
-                  <Link key={job._id.toString()} href={`/worker/jobs/${job._id}`} className="block group">
-                    <div className="flex items-center justify-between p-4 rounded-xl border border-[var(--nimmit-border)] bg-white hover:border-[var(--nimmit-info)]/30 hover:shadow-sm transition-all duration-200">
-                      <div className="space-y-1">
-                        <p className="font-medium text-[var(--nimmit-text-primary)] group-hover:text-[var(--nimmit-info)] transition-colors">
-                          {job.title}
-                        </p>
-                        <p className="text-sm text-[var(--nimmit-text-secondary)]">
-                          Submitted {new Date(job.updatedAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <Badge variant="outline" className="bg-[var(--nimmit-info-bg)] text-[var(--nimmit-info)] border-[var(--nimmit-info)]/20">
-                        In Review
-                      </Badge>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Quick Tips for Workers */}
-        <div className="grid gap-4 md:grid-cols-2 animate-fade-up stagger-6">
-          <TipCard
-            title="⚡ Quick Tip"
-            description="Start with the most urgent jobs first. Rush jobs should be completed within 12 hours."
-          />
-          <TipCard
-            title="💬 Communication"
-            description="Keep clients updated on your progress. A quick message goes a long way!"
-          />
+          {/* Right: In Review / Recent */}
+          <div className="flex flex-col bg-gray-50/30">
+            <div className="px-6 py-3 bg-gray-50/50 border-b border-gray-100 flex justify-between items-center">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase">Pending Review</h3>
+            </div>
+            <div className="flex-1 p-2 space-y-2">
+              {loading ? <SkeletonRows count={2} /> : inReview.length === 0 ? (
+                <div className="py-12 text-center text-gray-400 text-sm">Nothing pending review.</div>
+              ) : inReview.map(job => (
+                <Link key={job._id.toString()} href={`/worker/jobs/${job._id}`} className="block p-3 rounded-xl bg-white border border-gray-100 hover:shadow-sm transition-all opacity-80 hover:opacity-100">
+                  <div className="font-medium text-gray-900 text-sm mb-1">{job.title}</div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-purple-600 font-medium">In Review</span>
+                    <span className="text-[10px] text-gray-400">{new Date(job.createdAt).toLocaleDateString()}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-// Stats Card
-function StatsCard({ label, value, icon, color, delay }: {
+// Compact Stat Item
+function StatItem({ label, value, color, highlight }: {
   label: string;
   value: number;
-  icon: React.ReactNode;
-  color: "primary" | "info" | "success" | "tertiary";
-  delay: number;
+  color: "primary" | "info" | "success" | "muted";
+  highlight?: boolean;
 }) {
-  const colorClasses = {
-    primary: { bg: "bg-[var(--nimmit-accent-primary)]/10", text: "text-[var(--nimmit-accent-primary)]" },
-    info: { bg: "bg-[var(--nimmit-info)]/10", text: "text-[var(--nimmit-info)]" },
-    success: { bg: "bg-[var(--nimmit-success)]/10", text: "text-[var(--nimmit-success)]" },
-    tertiary: { bg: "bg-[var(--nimmit-accent-secondary)]/10", text: "text-[var(--nimmit-accent-secondary)]" },
+  const colors = {
+    primary: "text-[var(--nimmit-accent-primary)]",
+    info: "text-[var(--nimmit-info)]",
+    success: "text-[var(--nimmit-success)]",
+    muted: "text-[var(--nimmit-text-tertiary)]",
   };
 
   return (
-    <Card className={`border-[var(--nimmit-border)] shadow-sm animate-fade-up stagger-${delay + 1}`}>
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardDescription className="text-sm font-medium text-[var(--nimmit-text-secondary)]">{label}</CardDescription>
-          <div className={`p-2 rounded-lg ${colorClasses[color].bg}`}>
-            <svg className={`w-5 h-5 ${colorClasses[color].text}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              {icon}
-            </svg>
-          </div>
-        </div>
-        <CardTitle className="text-4xl font-display font-semibold text-[var(--nimmit-text-primary)]">{value}</CardTitle>
-      </CardHeader>
-    </Card>
+    <div className="flex items-center gap-2">
+      <span className={`text-2xl font-semibold font-display ${colors[color]} ${highlight ? "animate-pulse" : ""}`}>
+        {value}
+      </span>
+      <span className="text-xs text-[var(--nimmit-text-tertiary)]">{label}</span>
+    </div>
   );
 }
 
-// Job Card
-function JobCard({ job, index }: { job: JobWithPopulated; index: number }) {
+// Dense Job Row
+function JobRow({ job }: { job: JobWithPopulated }) {
   return (
-    <Link href={`/worker/jobs/${job._id}`} className="block group">
-      <div
-        className="flex items-center justify-between p-4 rounded-xl border border-[var(--nimmit-border)] bg-[var(--nimmit-bg-elevated)] hover:border-[var(--nimmit-accent-primary)]/30 hover:shadow-md transition-all duration-200 animate-fade-up"
-        style={{ animationDelay: `${index * 50}ms` }}
-      >
-        <div className="space-y-1 flex-1 min-w-0">
-          <p className="font-medium text-[var(--nimmit-text-primary)] truncate group-hover:text-[var(--nimmit-accent-primary)] transition-colors">
-            {job.title}
-          </p>
-          <p className="text-sm text-[var(--nimmit-text-secondary)] flex items-center gap-2">
-            <span className="inline-flex items-center gap-1">
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              {job.clientId.profile.firstName} {job.clientId.profile.lastName}
-            </span>
-            <span className="text-[var(--nimmit-text-tertiary)]">·</span>
-            <span>{job.category}</span>
-          </p>
+    <Link href={`/worker/jobs/${job._id}`} className="block hover:bg-[var(--nimmit-bg-secondary)] transition-colors">
+      <div className="flex items-center justify-between px-4 py-2.5">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium truncate">{job.title}</p>
+            <div className="flex items-center gap-2 text-xs text-[var(--nimmit-text-tertiary)]">
+              <span>{job.clientId.profile.firstName} {job.clientId.profile.lastName}</span>
+              <span>·</span>
+              <span>{job.category}</span>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-2 ml-4">
-          <StatusBadge status={job.status} />
+        <div className="flex items-center gap-2 shrink-0">
           {job.priority !== "standard" && <PriorityBadge priority={job.priority} />}
-          <svg className="w-5 h-5 text-[var(--nimmit-text-tertiary)] group-hover:text-[var(--nimmit-accent-primary)] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
+          <StatusBadge status={job.status} />
         </div>
       </div>
     </Link>
   );
 }
 
-// Empty State
-function EmptyState({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
+// Empty Row
+function EmptyRow({ message }: { message: string }) {
   return (
-    <div className="text-center py-12">
-      <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[var(--nimmit-bg-secondary)] flex items-center justify-center">
-        <svg className="w-8 h-8 text-[var(--nimmit-text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          {icon}
-        </svg>
-      </div>
-      <h3 className="text-lg font-medium text-[var(--nimmit-text-primary)] mb-2">{title}</h3>
-      <p className="text-[var(--nimmit-text-secondary)]">{description}</p>
+    <div className="px-4 py-6 text-center text-sm text-[var(--nimmit-text-tertiary)]">
+      {message}
     </div>
   );
 }
 
-// Tip Card
-function TipCard({ title, description }: { title: string; description: string }) {
+// Skeleton Rows
+function SkeletonRows({ count }: { count: number }) {
   return (
-    <Card className="border-[var(--nimmit-border)] bg-[var(--nimmit-bg-secondary)]/50">
-      <CardContent className="p-5">
-        <h4 className="font-medium text-[var(--nimmit-text-primary)] mb-1">{title}</h4>
-        <p className="text-sm text-[var(--nimmit-text-secondary)]">{description}</p>
-      </CardContent>
-    </Card>
+    <>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="flex items-center justify-between px-4 py-2.5">
+          <div className="flex-1 space-y-1.5">
+            <div className="h-3.5 w-40 bg-[var(--nimmit-bg-secondary)] rounded animate-pulse" />
+            <div className="h-2.5 w-24 bg-[var(--nimmit-bg-secondary)] rounded animate-pulse" />
+          </div>
+          <div className="h-5 w-16 bg-[var(--nimmit-bg-secondary)] rounded-full animate-pulse" />
+        </div>
+      ))}
+    </>
+  );
+}
+
+// Tip Card - Compact
+function TipCard({ emoji, title, description }: {
+  emoji: string;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="flex items-start gap-3 p-3 rounded-lg bg-[var(--nimmit-bg-elevated)] border border-[var(--nimmit-border)]">
+      <span className="text-lg">{emoji}</span>
+      <div>
+        <p className="text-sm font-medium text-[var(--nimmit-text-primary)]">{title}</p>
+        <p className="text-xs text-[var(--nimmit-text-tertiary)]">{description}</p>
+      </div>
+    </div>
   );
 }
 
 // Status Badge
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { className: string; label: string }> = {
-    assigned: { className: "bg-[var(--nimmit-info-bg)] text-[var(--nimmit-info)] border-[var(--nimmit-info)]/20", label: "New" },
-    in_progress: { className: "bg-[var(--nimmit-accent-primary)]/10 text-[var(--nimmit-accent-primary)] border-[var(--nimmit-accent-primary)]/20", label: "In Progress" },
-    revision: { className: "bg-[var(--nimmit-error-bg)] text-[var(--nimmit-error)] border-[var(--nimmit-error)]/20", label: "Needs Revision" },
+    assigned: { className: "bg-[var(--nimmit-info)]/10 text-[var(--nimmit-info)]", label: "New" },
+    in_progress: { className: "bg-[var(--nimmit-accent-primary)]/10 text-[var(--nimmit-accent-primary)]", label: "In Progress" },
+    review: { className: "bg-[#8E24AA]/10 text-[#8E24AA]", label: "Review" },
+    revision: { className: "bg-[var(--nimmit-error)]/10 text-[var(--nimmit-error)]", label: "Revision" },
+    completed: { className: "bg-[var(--nimmit-success)]/10 text-[var(--nimmit-success)]", label: "Done" },
   };
   const { className, label } = config[status] || config.assigned;
-  return <Badge variant="outline" className={`px-2.5 py-0.5 text-xs font-medium border rounded-full ${className}`}>{label}</Badge>;
+  return <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full ${className}`}>{label}</span>;
 }
 
 // Priority Badge
 function PriorityBadge({ priority }: { priority: string }) {
-  const config: Record<string, { className: string; label: string }> = {
-    rush: { className: "bg-[var(--nimmit-error)]/10 text-[var(--nimmit-error)] border-[var(--nimmit-error)]/20", label: "Rush" },
-    express: { className: "bg-[var(--nimmit-warning-bg)] text-[var(--nimmit-warning)] border-[var(--nimmit-warning)]/20", label: "Express" },
+  const config: Record<string, string> = {
+    rush: "bg-[var(--nimmit-error)]/10 text-[var(--nimmit-error)]",
+    express: "bg-[var(--nimmit-warning)]/10 text-[var(--nimmit-warning)]",
   };
-  const { className, label } = config[priority] || { className: "", label: priority };
-  return <Badge variant="outline" className={`px-2 py-0.5 text-xs font-medium border rounded-full ${className}`}>{label}</Badge>;
+  return <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full ${config[priority]}`}>{priority}</span>;
 }

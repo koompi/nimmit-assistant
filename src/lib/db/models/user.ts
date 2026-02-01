@@ -41,6 +41,14 @@ const WorkerProfileSchema = new Schema(
     maxConcurrentJobs: { type: Number, default: 3 },
     stats: { type: WorkerStatsSchema, default: () => ({}) },
     bio: { type: String },
+    // Stripe Connect for payouts
+    stripeConnectAccountId: { type: String },
+    stripeConnectStatus: {
+      type: String,
+      enum: ["pending", "active", "restricted", "disabled"],
+      default: "pending",
+    },
+    pendingEarnings: { type: Number, default: 0 }, // Earnings not yet paid out
   },
   { _id: false }
 );
@@ -65,6 +73,20 @@ const ClientBillingSchema = new Schema(
   { _id: false }
 );
 
+const OnboardingDataSchema = new Schema(
+  {
+    companySize: {
+      type: String,
+      enum: ["solo", "2-10", "11-50", "51-200", "200+"],
+    },
+    industry: { type: String },
+    primaryTaskTypes: { type: [String], default: [] },
+    howDidYouHear: { type: String },
+    completedAt: { type: Date },
+  },
+  { _id: false }
+);
+
 const ClientProfileSchema = new Schema(
   {
     company: { type: String },
@@ -72,6 +94,8 @@ const ClientProfileSchema = new Schema(
     totalJobs: { type: Number, default: 0 },
     totalSpent: { type: Number, default: 0 },
     billing: { type: ClientBillingSchema, default: () => ({ credits: 0, rolloverCredits: 0 }) },
+    onboardingCompleted: { type: Boolean, default: false },
+    onboarding: { type: OnboardingDataSchema },
   },
   { _id: false }
 );
@@ -87,9 +111,52 @@ const UserProfileSchema = new Schema(
   { _id: false }
 );
 
+const NotificationPreferencesSchema = new Schema(
+  {
+    // Email notifications
+    emailEnabled: { type: Boolean, default: true },
+    emailJobAssigned: { type: Boolean, default: true },
+    emailJobStarted: { type: Boolean, default: true },
+    emailJobSubmitted: { type: Boolean, default: true },
+    emailJobCompleted: { type: Boolean, default: true },
+    emailJobRevision: { type: Boolean, default: true },
+    emailNewMessage: { type: Boolean, default: true },
+    emailPaymentReceived: { type: Boolean, default: true },
+    emailWeeklyDigest: { type: Boolean, default: false },
+    // In-app notifications (always on but can control what shows)
+    inAppEnabled: { type: Boolean, default: true },
+  },
+  { _id: false }
+);
+
+const UserSettingsSchema = new Schema(
+  {
+    notifications: { type: NotificationPreferencesSchema, default: () => ({}) },
+    // Future settings can be added here
+  },
+  { _id: false }
+);
+
 // ===========================================
 // User Document Interface
 // ===========================================
+
+export interface NotificationPreferences {
+  emailEnabled: boolean;
+  emailJobAssigned: boolean;
+  emailJobStarted: boolean;
+  emailJobSubmitted: boolean;
+  emailJobCompleted: boolean;
+  emailJobRevision: boolean;
+  emailNewMessage: boolean;
+  emailPaymentReceived: boolean;
+  emailWeeklyDigest: boolean;
+  inAppEnabled: boolean;
+}
+
+export interface UserSettings {
+  notifications: NotificationPreferences;
+}
 
 export interface IUser extends Document {
   _id: Types.ObjectId;
@@ -99,6 +166,7 @@ export interface IUser extends Document {
   profile: UserProfile;
   workerProfile?: WorkerProfile;
   clientProfile?: ClientProfile;
+  settings?: UserSettings;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -116,7 +184,6 @@ const UserSchema = new Schema<IUser>(
       unique: true,
       lowercase: true,
       trim: true,
-      index: true,
     },
     passwordHash: {
       type: String,
@@ -144,6 +211,10 @@ const UserSchema = new Schema<IUser>(
       required: function (this: IUser) {
         return this.role === "client";
       },
+    },
+    settings: {
+      type: UserSettingsSchema,
+      default: () => ({ notifications: {} }),
     },
     isActive: {
       type: Boolean,

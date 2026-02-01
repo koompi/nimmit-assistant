@@ -1,33 +1,42 @@
-// Notification Store - In-memory for development, use Redis in production
-import { v4 as uuidv4 } from 'uuid';
+
+// Notification Store - MongoDB implementation
 import {
-  Notification,
+  Notification as NotificationType,
   NotificationPayload,
-  NotificationType,
+  NotificationType as EnumNotificationType,
   NOTIFICATION_TEMPLATES,
   formatNotificationMessage,
 } from './types';
+import { Notification as NotificationModel, INotification } from '@/lib/db/models';
+import dbConnect from '@/lib/db/connection';
 
-// In-memory stores
-const notifications: Map<string, Notification[]> = new Map();
-const subscribers: Map<string, Set<(notification: Notification) => void>> = new Map();
+// Helper to convert Mongoose doc to Notification interface
+const toNotification = (doc: INotification): NotificationType => ({
+  id: doc._id.toString(),
+  userId: doc.userId,
+  type: doc.type as EnumNotificationType,
+  title: doc.title,
+  message: doc.message,
+  data: doc.data as NotificationType['data'],
+  read: doc.read,
+  createdAt: doc.createdAt,
+});
 
-// Max notifications per user
-const MAX_NOTIFICATIONS = 100;
 
 /**
  * Create and store a notification
  */
-export function createNotification(
+export async function createNotification(
   userId: string,
   payload: NotificationPayload
-): Notification {
+): Promise<NotificationType> {
+  await dbConnect();
+
   const template = NOTIFICATION_TEMPLATES[payload.type];
   const title = payload.title || formatNotificationMessage(template.title, payload.data);
   const message = payload.message || formatNotificationMessage(template.message, payload.data);
 
-  const notification: Notification = {
-    id: uuidv4(),
+  const doc = await NotificationModel.create({
     userId,
     type: payload.type,
     title,
@@ -35,134 +44,91 @@ export function createNotification(
     data: payload.data,
     read: false,
     createdAt: new Date(),
-  };
+  }) as INotification;
 
-  // Store notification
-  const userNotifications = notifications.get(userId) || [];
-  userNotifications.unshift(notification);
-
-  // Trim to max size
-  if (userNotifications.length > MAX_NOTIFICATIONS) {
-    userNotifications.splice(MAX_NOTIFICATIONS);
-  }
-
-  notifications.set(userId, userNotifications);
-
-  // Notify subscribers
-  const userSubscribers = subscribers.get(userId);
-  if (userSubscribers) {
-    userSubscribers.forEach((callback) => callback(notification));
-  }
-
-  return notification;
+  return toNotification(doc);
 }
 
 /**
  * Get notifications for a user
  */
-export function getNotifications(
+export async function getNotifications(
   userId: string,
   options: { unreadOnly?: boolean; limit?: number } = {}
-): Notification[] {
+): Promise<NotificationType[]> {
+  await dbConnect();
   const { unreadOnly = false, limit = 50 } = options;
-  let userNotifications = notifications.get(userId) || [];
 
+  const query: any = { userId };
   if (unreadOnly) {
-    userNotifications = userNotifications.filter((n) => !n.read);
+    query.read = false;
   }
 
-  return userNotifications.slice(0, limit);
+  const docs = await NotificationModel.find(query)
+    .sort({ createdAt: -1 })
+    .limit(limit) as INotification[];
+
+  return docs.map(toNotification);
 }
 
 /**
  * Get unread count for a user
  */
-export function getUnreadCount(userId: string): number {
-  const userNotifications = notifications.get(userId) || [];
-  return userNotifications.filter((n) => !n.read).length;
+export async function getUnreadCount(userId: string): Promise<number> {
+  await dbConnect();
+  return NotificationModel.countDocuments({ userId, read: false });
 }
 
 /**
  * Mark notification as read
  */
-export function markAsRead(userId: string, notificationId: string): boolean {
-  const userNotifications = notifications.get(userId);
-  if (!userNotifications) return false;
-
-  const notification = userNotifications.find((n) => n.id === notificationId);
-  if (!notification) return false;
-
-  notification.read = true;
-  return true;
+export async function markAsRead(userId: string, notificationId: string): Promise<boolean> {
+  await dbConnect();
+  const result = await NotificationModel.updateOne(
+    { _id: notificationId, userId },
+    { $set: { read: true } }
+  );
+  return result.modifiedCount > 0;
 }
 
 /**
  * Mark all notifications as read for a user
  */
-export function markAllAsRead(userId: string): number {
-  const userNotifications = notifications.get(userId);
-  if (!userNotifications) return 0;
-
-  let count = 0;
-  userNotifications.forEach((n) => {
-    if (!n.read) {
-      n.read = true;
-      count++;
-    }
-  });
-
-  return count;
-}
-
-/**
- * Subscribe to real-time notifications
- */
-export function subscribe(
-  userId: string,
-  callback: (notification: Notification) => void
-): () => void {
-  let userSubscribers = subscribers.get(userId);
-  if (!userSubscribers) {
-    userSubscribers = new Set();
-    subscribers.set(userId, userSubscribers);
-  }
-
-  userSubscribers.add(callback);
-
-  // Return unsubscribe function
-  return () => {
-    userSubscribers?.delete(callback);
-    if (userSubscribers?.size === 0) {
-      subscribers.delete(userId);
-    }
-  };
+export async function markAllAsRead(userId: string): Promise<number> {
+  await dbConnect();
+  const result = await NotificationModel.updateMany(
+    { userId, read: false },
+    { $set: { read: true } }
+  );
+  return result.modifiedCount;
 }
 
 /**
  * Send notification to a user (convenience function)
  */
-export function notify(
+export async function notify(
   userId: string,
-  type: NotificationType,
-  data?: Notification['data']
-): Notification {
+  type: EnumNotificationType,
+  data?: NotificationType['data']
+): Promise<NotificationType> {
   return createNotification(userId, { type, title: '', message: '', data });
 }
 
 /**
  * Send notification to multiple users
  */
-export function notifyMany(
+export async function notifyMany(
   userIds: string[],
-  type: NotificationType,
-  data?: Notification['data']
-): Notification[] {
-  return userIds.map((userId) => notify(userId, type, data));
+  type: EnumNotificationType,
+  data?: NotificationType['data']
+): Promise<NotificationType[]> {
+  return Promise.all(userIds.map((userId) => notify(userId, type, data)));
 }
 
 /**
  * Clear all notifications for a user (for testing)
  */
-export function clearNotifications(userId: string): void {
-  notifications.delete(userId);
+export async function clearNotifications(userId: string): Promise<void> {
+  await dbConnect();
+  await NotificationModel.deleteMany({ userId });
 }

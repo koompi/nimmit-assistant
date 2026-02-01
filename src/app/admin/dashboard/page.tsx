@@ -3,13 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Job } from "@/types";
 import type { IUser } from "@/lib/db/models";
@@ -64,172 +57,120 @@ export default function AdminDashboard() {
   );
 
   return (
-    <div className="min-h-screen bg-[var(--nimmit-bg-primary)]">
-      <div className="max-w-7xl mx-auto px-6 py-10 space-y-8">
-        {/* Header */}
-        <div className="animate-fade-up">
-          <h1 className="text-3xl md:text-4xl font-display font-semibold tracking-tight text-[var(--nimmit-text-primary)]">
-            Admin Dashboard
-          </h1>
-          <p className="text-[var(--nimmit-text-secondary)] mt-2 text-lg">
-            Manage jobs and team assignments.
-          </p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between pb-2">
+        <div>
+          <h1 className="text-2xl font-display font-medium text-[var(--nimmit-text-primary)] tracking-tight">Admin Overview</h1>
+          <p className="text-sm text-[var(--nimmit-text-tertiary)] mt-1">System-wide monitoring and assignment control</p>
+        </div>
+        <div className="flex gap-2">
+          <Link href="/admin/jobs"><Button size="sm" variant="outline" className="rounded-full bg-white/50 border-gray-200">Jobs</Button></Link>
+          <Link href="/admin/team"><Button size="sm" variant="outline" className="rounded-full bg-white/50 border-gray-200">Team</Button></Link>
+        </div>
+      </div>
+
+      {/* Main Floating Panel */}
+      <div className="bg-white rounded-[24px] shadow-sm border border-gray-200/60 overflow-hidden min-h-[600px] flex flex-col">
+        {/* Quick Stats Header */}
+        <div className="flex items-center gap-8 px-8 py-5 border-b border-gray-100 bg-gray-50/30">
+          <div className="flex flex-col">
+            <span className="text-[10px] uppercase tracking-wide font-semibold text-gray-500">Unassigned</span>
+            <span className="text-2xl font-semibold text-amber-600">{pendingJobs.length}</span>
+          </div>
+          <div className="w-px h-8 bg-gray-200"></div>
+          <div className="flex flex-col">
+            <span className="text-[10px] uppercase tracking-wide font-semibold text-gray-500">Active</span>
+            <span className="text-2xl font-semibold text-blue-600">{activeJobs.length}</span>
+          </div>
+          <div className="w-px h-8 bg-gray-200"></div>
+          <div className="flex flex-col">
+            <span className="text-[10px] uppercase tracking-wide font-semibold text-gray-500">Available Team</span>
+            <span className="text-2xl font-semibold text-emerald-600">{availableWorkers.length}</span>
+          </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-4">
-          <StatsCard
-            label="Unassigned"
-            value={pendingJobs.length}
-            icon={<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />}
-            color="warning"
-            highlight={pendingJobs.length > 0}
-            delay={0}
-          />
-          <StatsCard
-            label="Active Jobs"
-            value={activeJobs.length}
-            icon={<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />}
-            color="primary"
-            delay={1}
-          />
-          <StatsCard
-            label="Available"
-            value={availableWorkers.length}
-            icon={<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />}
-            color="success"
-            delay={2}
-          />
-          <StatsCard
-            label="Completed"
-            value={completedJobs.length}
-            icon={<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />}
-            color="tertiary"
-            delay={3}
-          />
+        {/* Dashboard Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-gray-100 flex-1">
+
+          {/* Left: Input Queue (Unassigned Jobs) */}
+          <div className="flex flex-col">
+            <div className="px-6 py-3 bg-white border-b border-gray-100 flex justify-between items-center sticky top-0">
+              <h3 className="text-xs font-bold text-gray-900 uppercase tracking-widest flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
+                Action Required
+              </h3>
+              <Link href="/admin/jobs?status=pending" className="text-[10px] font-medium text-blue-600 hover:underline">View Queue</Link>
+            </div>
+            <div className="flex-1 p-2 space-y-2 bg-gray-50/30">
+              {loading ? <SkeletonRows count={4} /> : pendingJobs.length === 0 ? (
+                <EmptyRow message="Clean Queue! Great job. 🎉" />
+              ) : pendingJobs.map(job => (
+                <JobRow key={job._id.toString()} job={job} showClient />
+              ))}
+            </div>
+          </div>
+
+          {/* Right: Team Snapshot */}
+          <div className="flex flex-col">
+            <div className="px-6 py-3 bg-white border-b border-gray-100 flex justify-between items-center sticky top-0">
+              <h3 className="text-xs font-bold text-gray-900 uppercase tracking-widest">Team Availability</h3>
+              <Link href="/admin/team" className="text-[10px] font-medium text-blue-600 hover:underline">Manage Team</Link>
+            </div>
+            <div className="flex-1 p-0">
+              {loading ? <SkeletonRows count={5} /> : workers.length === 0 ? (
+                <EmptyRow message="No team members found." />
+              ) : workers.slice(0, 10).map(worker => (
+                <WorkerRow key={worker._id.toString()} worker={worker} jobs={jobs} />
+              ))}
+            </div>
+          </div>
         </div>
-
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* Unassigned Jobs Queue */}
-          <Card className={`border-[var(--nimmit-border)] shadow-sm animate-fade-up stagger-4 ${pendingJobs.length > 0 ? "border-[var(--nimmit-warning)]/30" : ""}`}>
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {pendingJobs.length > 0 && (
-                    <div className="w-2 h-2 rounded-full bg-[var(--nimmit-warning)] animate-pulse" />
-                  )}
-                  <div>
-                    <CardTitle className="text-lg font-display">Unassigned Jobs</CardTitle>
-                    <CardDescription>Jobs waiting for assignment</CardDescription>
-                  </div>
-                </div>
-                <Link href="/admin/jobs">
-                  <Button variant="outline" size="sm" className="border-[var(--nimmit-border)]">View All</Button>
-                </Link>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {loading ? <SkeletonList /> : pendingJobs.length === 0 ? (
-                <EmptyState icon="check" title="All caught up!" description="All jobs have been assigned" />
-              ) : (
-                <div className="space-y-3">
-                  {pendingJobs.slice(0, 5).map((job, i) => (
-                    <JobRow key={job._id.toString()} job={job} index={i} />
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Team Status */}
-          <Card className="border-[var(--nimmit-border)] shadow-sm animate-fade-up stagger-5">
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg font-display">Team Status</CardTitle>
-                  <CardDescription>Worker availability and workload</CardDescription>
-                </div>
-                <Link href="/admin/team">
-                  <Button variant="outline" size="sm" className="border-[var(--nimmit-border)]">Manage Team</Button>
-                </Link>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {loading ? <SkeletonList /> : workers.length === 0 ? (
-                <EmptyState icon="users" title="No workers yet" description="Workers will appear here when they register" />
-              ) : (
-                <div className="space-y-3">
-                  {workers.slice(0, 5).map((worker, i) => (
-                    <WorkerRow key={worker._id.toString()} worker={worker} jobs={jobs} index={i} />
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Recent Activity */}
-        <Card className="border-[var(--nimmit-border)] shadow-sm animate-fade-up stagger-6">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg font-display">Recent Activity</CardTitle>
-            <CardDescription>Latest jobs and updates</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? <SkeletonList /> : jobs.length === 0 ? (
-              <EmptyState icon="activity" title="No activity yet" description="Recent jobs will appear here" />
-            ) : (
-              <div className="space-y-3">
-                {jobs.slice(0, 5).map((job, i) => (
-                  <ActivityRow key={job._id.toString()} job={job} index={i} />
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
 }
 
-// Stats Card
-function StatsCard({ label, value, icon, color, highlight, delay }: {
-  label: string; value: number; icon: React.ReactNode;
-  color: "warning" | "primary" | "success" | "tertiary"; highlight?: boolean; delay: number;
+// Compact Stat Item
+function StatItem({ label, value, color, highlight }: {
+  label: string;
+  value: number;
+  color: "warning" | "primary" | "success" | "muted";
+  highlight?: boolean;
 }) {
   const colors = {
-    warning: { bg: "bg-[var(--nimmit-warning)]/10", text: "text-[var(--nimmit-warning)]", border: highlight ? "border-[var(--nimmit-warning)]/50" : "" },
-    primary: { bg: "bg-[var(--nimmit-accent-primary)]/10", text: "text-[var(--nimmit-accent-primary)]", border: "" },
-    success: { bg: "bg-[var(--nimmit-success)]/10", text: "text-[var(--nimmit-success)]", border: "" },
-    tertiary: { bg: "bg-[var(--nimmit-accent-secondary)]/10", text: "text-[var(--nimmit-accent-secondary)]", border: "" },
+    warning: "text-[var(--nimmit-warning)]",
+    primary: "text-[var(--nimmit-accent-primary)]",
+    success: "text-[var(--nimmit-success)]",
+    muted: "text-[var(--nimmit-text-tertiary)]",
   };
 
   return (
-    <Card className={`border-[var(--nimmit-border)] ${colors[color].border} shadow-sm animate-fade-up stagger-${delay + 1}`}>
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardDescription className="text-sm font-medium">{label}</CardDescription>
-          <div className={`p-2 rounded-lg ${colors[color].bg}`}>
-            <svg className={`w-5 h-5 ${colors[color].text}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">{icon}</svg>
-          </div>
-        </div>
-        <CardTitle className="text-4xl font-display font-semibold">{value}</CardTitle>
-      </CardHeader>
-    </Card>
+    <div className="flex items-center gap-2">
+      <span className={`text-2xl font-semibold font-display ${colors[color]} ${highlight ? "animate-pulse" : ""}`}>
+        {value}
+      </span>
+      <span className="text-xs text-[var(--nimmit-text-tertiary)]">{label}</span>
+    </div>
   );
 }
 
-// Job Row
-function JobRow({ job, index }: { job: JobWithPopulated; index: number }) {
+// Dense Job Row
+function JobRow({ job, showClient }: { job: JobWithPopulated; showClient?: boolean }) {
   return (
-    <Link href={`/admin/jobs/${job._id}`} className="block group">
-      <div className="flex items-center justify-between p-3 rounded-xl border border-[var(--nimmit-border)] hover:border-[var(--nimmit-accent-primary)]/30 hover:shadow-sm transition-all" style={{ animationDelay: `${index * 50}ms` }}>
-        <div className="min-w-0 flex-1">
-          <p className="font-medium truncate group-hover:text-[var(--nimmit-accent-primary)]">{job.title}</p>
-          <p className="text-xs text-[var(--nimmit-text-tertiary)]">{job.clientId.profile.firstName} · {job.category}</p>
+    <Link href={`/admin/jobs/${job._id}`} className="block hover:bg-[var(--nimmit-bg-secondary)] transition-colors">
+      <div className="flex items-center justify-between px-4 py-2.5">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium truncate">{job.title}</p>
+            <p className="text-xs text-[var(--nimmit-text-tertiary)] truncate">
+              {showClient && `${job.clientId.profile.firstName} · `}{job.category}
+            </p>
+          </div>
         </div>
-        <div className="flex items-center gap-2 ml-2">
+        <div className="flex items-center gap-2 shrink-0">
           {job.priority !== "standard" && <PriorityBadge priority={job.priority} />}
-          <StatusBadge status="pending" />
+          <StatusBadge status={job.status} />
         </div>
       </div>
     </Link>
@@ -237,20 +178,20 @@ function JobRow({ job, index }: { job: JobWithPopulated; index: number }) {
 }
 
 // Worker Row
-function WorkerRow({ worker, jobs, index }: { worker: IUser; jobs: JobWithPopulated[]; index: number }) {
-  const workerJobs = jobs.filter(j => j.workerId?._id === worker._id.toString() && !["completed", "cancelled"].includes(j.status));
+function WorkerRow({ worker, jobs }: { worker: IUser; jobs: JobWithPopulated[] }) {
+  const activeJobs = jobs.filter(
+    (j) => j.workerId?._id === worker._id.toString() && !["completed", "cancelled"].includes(j.status)
+  ).length;
 
   return (
-    <div className="flex items-center justify-between p-3 rounded-xl border border-[var(--nimmit-border)]" style={{ animationDelay: `${index * 50}ms` }}>
+    <div className="flex items-center justify-between px-4 py-2.5">
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-full bg-[var(--nimmit-accent-primary)]/10 flex items-center justify-center">
-          <span className="text-sm font-medium text-[var(--nimmit-accent-primary)]">
-            {worker.profile.firstName[0]}{worker.profile.lastName[0]}
-          </span>
+        <div className="w-7 h-7 rounded-full bg-[var(--nimmit-accent-primary)]/10 flex items-center justify-center text-xs font-medium text-[var(--nimmit-accent-primary)]">
+          {worker.profile.firstName[0]}{worker.profile.lastName[0]}
         </div>
         <div>
-          <p className="font-medium text-sm">{worker.profile.firstName} {worker.profile.lastName}</p>
-          <p className="text-xs text-[var(--nimmit-text-tertiary)]">{workerJobs.length} active jobs</p>
+          <p className="text-sm font-medium">{worker.profile.firstName} {worker.profile.lastName}</p>
+          <p className="text-xs text-[var(--nimmit-text-tertiary)]">{activeJobs} active</p>
         </div>
       </div>
       <AvailabilityBadge availability={worker.workerProfile?.availability || "offline"} />
@@ -259,13 +200,15 @@ function WorkerRow({ worker, jobs, index }: { worker: IUser; jobs: JobWithPopula
 }
 
 // Activity Row
-function ActivityRow({ job, index }: { job: JobWithPopulated; index: number }) {
+function ActivityRow({ job }: { job: JobWithPopulated }) {
   return (
-    <Link href={`/admin/jobs/${job._id}`} className="block group">
-      <div className="flex items-center justify-between p-3 rounded-xl border border-[var(--nimmit-border)] hover:shadow-sm transition-all" style={{ animationDelay: `${index * 50}ms` }}>
-        <div className="min-w-0 flex-1">
-          <p className="font-medium truncate text-sm group-hover:text-[var(--nimmit-accent-primary)]">{job.title}</p>
-          <p className="text-xs text-[var(--nimmit-text-tertiary)]">{new Date(job.updatedAt).toLocaleString()}</p>
+    <Link href={`/admin/jobs/${job._id}`} className="block hover:bg-[var(--nimmit-bg-secondary)] transition-colors">
+      <div className="flex items-center justify-between px-4 py-2">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <p className="text-sm truncate">{job.title}</p>
+          <span className="text-xs text-[var(--nimmit-text-tertiary)] shrink-0">
+            {new Date(job.updatedAt).toLocaleDateString()}
+          </span>
         </div>
         <StatusBadge status={job.status} />
       </div>
@@ -273,35 +216,28 @@ function ActivityRow({ job, index }: { job: JobWithPopulated; index: number }) {
   );
 }
 
-// Skeleton List
-function SkeletonList() {
+// Skeleton Rows
+function SkeletonRows({ count }: { count: number }) {
   return (
-    <div className="space-y-3">
-      {[1, 2, 3].map(i => (
-        <div key={i} className="flex items-center justify-between p-3 rounded-xl border border-[var(--nimmit-border)]">
-          <div className="space-y-2 flex-1"><div className="h-4 w-48 skeleton rounded" /><div className="h-3 w-32 skeleton rounded" /></div>
-          <div className="h-5 w-20 skeleton rounded-full" />
+    <>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="flex items-center justify-between px-4 py-2.5">
+          <div className="flex-1 space-y-1.5">
+            <div className="h-3.5 w-40 bg-[var(--nimmit-bg-secondary)] rounded animate-pulse" />
+            <div className="h-2.5 w-24 bg-[var(--nimmit-bg-secondary)] rounded animate-pulse" />
+          </div>
+          <div className="h-5 w-16 bg-[var(--nimmit-bg-secondary)] rounded-full animate-pulse" />
         </div>
       ))}
-    </div>
+    </>
   );
 }
 
-// Empty State
-function EmptyState({ icon, title, description }: { icon: "check" | "users" | "activity"; title: string; description: string }) {
-  const icons = {
-    check: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />,
-    users: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />,
-    activity: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />,
-  };
-
+// Empty Row
+function EmptyRow({ message }: { message: string }) {
   return (
-    <div className="text-center py-8">
-      <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[var(--nimmit-bg-secondary)] flex items-center justify-center">
-        <svg className="w-6 h-6 text-[var(--nimmit-text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">{icons[icon]}</svg>
-      </div>
-      <p className="font-medium text-[var(--nimmit-text-primary)]">{title}</p>
-      <p className="text-sm text-[var(--nimmit-text-secondary)]">{description}</p>
+    <div className="px-4 py-6 text-center text-sm text-[var(--nimmit-text-tertiary)]">
+      {message}
     </div>
   );
 }
@@ -309,30 +245,30 @@ function EmptyState({ icon, title, description }: { icon: "check" | "users" | "a
 // Badges
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { className: string; label: string }> = {
-    pending: { className: "bg-[var(--nimmit-warning-bg)] text-[var(--nimmit-warning)] border-[var(--nimmit-warning)]/20", label: "Unassigned" },
-    assigned: { className: "bg-[var(--nimmit-info-bg)] text-[var(--nimmit-info)] border-[var(--nimmit-info)]/20", label: "Assigned" },
-    in_progress: { className: "bg-[var(--nimmit-accent-primary)]/10 text-[var(--nimmit-accent-primary)] border-[var(--nimmit-accent-primary)]/20", label: "In Progress" },
-    review: { className: "bg-[var(--nimmit-info-bg)] text-[var(--nimmit-info)] border-[var(--nimmit-info)]/20", label: "In Review" },
-    completed: { className: "bg-[var(--nimmit-success-bg)] text-[var(--nimmit-success)] border-[var(--nimmit-success)]/20", label: "Completed" },
+    pending: { className: "bg-[var(--nimmit-warning)]/10 text-[var(--nimmit-warning)]", label: "Unassigned" },
+    assigned: { className: "bg-[var(--nimmit-info)]/10 text-[var(--nimmit-info)]", label: "Assigned" },
+    in_progress: { className: "bg-[var(--nimmit-accent-primary)]/10 text-[var(--nimmit-accent-primary)]", label: "In Progress" },
+    review: { className: "bg-[var(--nimmit-info)]/10 text-[var(--nimmit-info)]", label: "Review" },
+    completed: { className: "bg-[var(--nimmit-success)]/10 text-[var(--nimmit-success)]", label: "Done" },
   };
   const { className, label } = config[status] || config.pending;
-  return <Badge variant="outline" className={`px-2 py-0.5 text-xs border rounded-full ${className}`}>{label}</Badge>;
+  return <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full ${className}`}>{label}</span>;
 }
 
 function PriorityBadge({ priority }: { priority: string }) {
-  const config: Record<string, { className: string }> = {
-    rush: { className: "bg-[var(--nimmit-error)]/10 text-[var(--nimmit-error)] border-[var(--nimmit-error)]/20" },
-    express: { className: "bg-[var(--nimmit-warning-bg)] text-[var(--nimmit-warning)] border-[var(--nimmit-warning)]/20" },
+  const config: Record<string, string> = {
+    rush: "bg-[var(--nimmit-error)]/10 text-[var(--nimmit-error)]",
+    express: "bg-[var(--nimmit-warning)]/10 text-[var(--nimmit-warning)]",
   };
-  return <Badge variant="outline" className={`px-2 py-0.5 text-xs border rounded-full ${config[priority]?.className}`}>{priority}</Badge>;
+  return <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full ${config[priority]}`}>{priority}</span>;
 }
 
 function AvailabilityBadge({ availability }: { availability: string }) {
   const config: Record<string, { className: string; label: string }> = {
-    available: { className: "bg-[var(--nimmit-success-bg)] text-[var(--nimmit-success)] border-[var(--nimmit-success)]/20", label: "Available" },
-    busy: { className: "bg-[var(--nimmit-warning-bg)] text-[var(--nimmit-warning)] border-[var(--nimmit-warning)]/20", label: "Busy" },
-    offline: { className: "bg-[var(--nimmit-bg-secondary)] text-[var(--nimmit-text-tertiary)] border-[var(--nimmit-border)]", label: "Offline" },
+    available: { className: "bg-[var(--nimmit-success)]/10 text-[var(--nimmit-success)]", label: "Available" },
+    busy: { className: "bg-[var(--nimmit-warning)]/10 text-[var(--nimmit-warning)]", label: "Busy" },
+    offline: { className: "bg-[var(--nimmit-bg-secondary)] text-[var(--nimmit-text-tertiary)]", label: "Offline" },
   };
   const { className, label } = config[availability] || config.offline;
-  return <Badge variant="outline" className={`px-2 py-0.5 text-xs border rounded-full ${className}`}>{label}</Badge>;
+  return <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full ${className}`}>{label}</span>;
 }

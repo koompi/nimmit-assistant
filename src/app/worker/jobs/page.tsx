@@ -3,13 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
     Select,
@@ -73,27 +66,25 @@ export default function WorkerJobsPage() {
     const completedJobs = jobs.filter((j) => getStatusGroup(j.status) === "completed");
 
     return (
-        <div className="min-h-screen bg-[var(--nimmit-bg-primary)]">
-            <div className="max-w-6xl mx-auto px-6 py-10 space-y-8">
-                {/* Header */}
-                <div className="animate-fade-up">
-                    <h1 className="text-3xl md:text-4xl font-display font-semibold tracking-tight text-[var(--nimmit-text-primary)]">
+        <div className="space-y-4">
+            {/* Header */}
+            <div className="flex items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-xl font-display font-semibold text-[var(--nimmit-text-primary)]">
                         My Assignments
                     </h1>
-                    <p className="text-[var(--nimmit-text-secondary)] mt-2">
-                        View and manage your assigned tasks
+                    <p className="text-sm text-[var(--nimmit-text-tertiary)]">
+                        {jobs.length} total assignments
                     </p>
                 </div>
-
-                {/* Filters */}
-                <div className="flex flex-wrap items-center gap-4 animate-fade-up stagger-1">
+                <div className="flex items-center gap-2">
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="w-[200px] h-11 bg-[var(--nimmit-bg-elevated)] border-[var(--nimmit-border)]">
-                            <SelectValue placeholder="Filter by status" />
+                        <SelectTrigger className="w-[160px] h-9 text-sm bg-[var(--nimmit-bg-elevated)] border-[var(--nimmit-border)]">
+                            <SelectValue placeholder="Filter" />
                         </SelectTrigger>
                         <SelectContent className="bg-[var(--nimmit-bg-elevated)] border-[var(--nimmit-border)]">
                             {STATUS_OPTIONS.map((option) => (
-                                <SelectItem key={option.value} value={option.value} className="cursor-pointer">
+                                <SelectItem key={option.value} value={option.value}>
                                     <span className="flex items-center gap-2">
                                         <span>{option.icon}</span>
                                         <span>{option.label}</span>
@@ -102,220 +93,138 @@ export default function WorkerJobsPage() {
                             ))}
                         </SelectContent>
                     </Select>
-                    {statusFilter !== "all" && (
-                        <Button variant="ghost" size="sm" onClick={() => setStatusFilter("all")} className="text-[var(--nimmit-text-secondary)]">
-                            <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                            Clear
-                        </Button>
+                </div>
+            </div>
+
+            {/* Active Jobs */}
+            <div className="bg-[var(--nimmit-bg-elevated)] rounded-lg border border-[var(--nimmit-border)]">
+                <div className="px-4 py-3 border-b border-[var(--nimmit-border)] bg-[var(--nimmit-bg-secondary)]/30">
+                    <h2 className="text-xs font-semibold text-[var(--nimmit-text-secondary)] uppercase tracking-wider">Active Jobs</h2>
+                </div>
+                <div className="divide-y divide-[var(--nimmit-border)]">
+                    {loading ? (
+                        <SkeletonRows count={3} />
+                    ) : activeJobs.length === 0 ? (
+                        <EmptyRow message="No active jobs" />
+                    ) : (
+                        activeJobs.map((job) => (
+                            <JobRow key={job._id.toString()} job={job} highlight />
+                        ))
                     )}
                 </div>
-
-                {/* Active Jobs */}
-                <JobSection
-                    title="Active Jobs"
-                    description="Jobs you're currently working on"
-                    jobs={activeJobs}
-                    loading={loading}
-                    emptyIcon="inbox"
-                    emptyMessage="No active jobs at the moment"
-                    highlight
-                    delay={2}
-                />
-
-                {/* In Review */}
-                {reviewJobs.length > 0 && (
-                    <JobSection
-                        title="Awaiting Review"
-                        description="Jobs waiting for client approval"
-                        jobs={reviewJobs}
-                        loading={false}
-                        color="info"
-                        delay={3}
-                    />
-                )}
-
-                {/* Completed */}
-                {completedJobs.length > 0 && (
-                    <JobSection
-                        title="Completed"
-                        description="Successfully delivered jobs"
-                        jobs={completedJobs.slice(0, 10)}
-                        loading={false}
-                        color="success"
-                        showMore={completedJobs.length > 10 ? completedJobs.length : undefined}
-                        delay={4}
-                    />
-                )}
             </div>
+
+            {/* In Review */}
+            {reviewJobs.length > 0 && (
+                <div className="bg-[var(--nimmit-bg-elevated)] rounded-lg border border-[var(--nimmit-info)]/30">
+                    <div className="px-4 py-3 border-b border-[var(--nimmit-info)]/20 bg-[var(--nimmit-info)]/5">
+                        <h2 className="text-xs font-semibold text-[var(--nimmit-info)] uppercase tracking-wider">Awaiting Review</h2>
+                    </div>
+                    <div className="divide-y divide-[var(--nimmit-border)]">
+                        {reviewJobs.map((job) => (
+                            <JobRow key={job._id.toString()} job={job} />
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Completed */}
+            {completedJobs.length > 0 && (
+                <div className="bg-[var(--nimmit-bg-elevated)] rounded-lg border border-[var(--nimmit-border)] opacity-80">
+                    <div className="px-4 py-3 border-b border-[var(--nimmit-border)]">
+                        <h2 className="text-xs font-semibold text-[var(--nimmit-text-tertiary)] uppercase tracking-wider">Completed History</h2>
+                    </div>
+                    <div className="divide-y divide-[var(--nimmit-border)]">
+                        {completedJobs.slice(0, 10).map((job) => (
+                            <JobRow key={job._id.toString()} job={job} />
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
 
-// Job Section Component
-function JobSection({
-    title,
-    description,
-    jobs,
-    loading,
-    emptyIcon = "clipboard",
-    emptyMessage = "No jobs",
-    color,
-    highlight,
-    showMore,
-    delay = 0,
-}: {
-    title: string;
-    description: string;
-    jobs: JobWithPopulated[];
-    loading: boolean;
-    emptyIcon?: string;
-    emptyMessage?: string;
-    color?: "info" | "success";
-    highlight?: boolean;
-    showMore?: number;
-    delay?: number;
-}) {
-    const colorClasses = {
-        info: "border-[var(--nimmit-info)]/30 bg-[var(--nimmit-info-bg)]/30",
-        success: "border-[var(--nimmit-success)]/30 bg-[var(--nimmit-success-bg)]/30",
-    };
-
-    return (
-        <Card className={`border-[var(--nimmit-border)] shadow-sm animate-fade-up stagger-${delay} ${color ? colorClasses[color] : ""}`}>
-            <CardHeader className="pb-4">
-                <div className="flex items-center gap-2">
-                    {highlight && jobs.length > 0 && <div className="w-2 h-2 rounded-full bg-[var(--nimmit-accent-primary)] animate-pulse" />}
-                    <div>
-                        <CardTitle className="text-lg font-display">{title} ({jobs.length})</CardTitle>
-                        <CardDescription>{description}</CardDescription>
-                    </div>
-                </div>
-            </CardHeader>
-            <CardContent>
-                {loading ? (
-                    <SkeletonList />
-                ) : jobs.length === 0 ? (
-                    <EmptyState icon={emptyIcon} message={emptyMessage} />
-                ) : (
-                    <div className="space-y-3">
-                        {jobs.map((job, i) => (
-                            <JobCard key={job._id.toString()} job={job} index={i} />
-                        ))}
-                        {showMore && (
-                            <p className="text-center text-sm text-[var(--nimmit-text-tertiary)] pt-2">
-                                Showing 10 of {showMore} completed jobs
-                            </p>
-                        )}
-                    </div>
-                )}
-            </CardContent>
-        </Card>
-    );
-}
-
-// Job Card
-function JobCard({ job, index }: { job: JobWithPopulated; index: number }) {
+// Compact Job Row
+function JobRow({ job, highlight }: { job: JobWithPopulated; highlight?: boolean }) {
     const hasRevision = job.status === "revision";
 
     return (
-        <Link href={`/worker/jobs/${job._id}`} className="block group">
-            <div
-                className={`flex items-center justify-between p-4 rounded-xl border 
-                    ${hasRevision ? "border-[var(--nimmit-error)]/30 bg-[var(--nimmit-error-bg)]/30" : "border-[var(--nimmit-border)] bg-[var(--nimmit-bg-elevated)]"}
-                    hover:border-[var(--nimmit-accent-primary)]/30 hover:shadow-md transition-all duration-200`}
-                style={{ animationDelay: `${index * 50}ms` }}
-            >
-                <div className="space-y-1 flex-1 min-w-0">
+        <Link href={`/worker/jobs/${job._id}`} className={`block hover:bg-[var(--nimmit-bg-secondary)] transition-colors group ${hasRevision ? "bg-[var(--nimmit-error)]/5 hover:bg-[var(--nimmit-error)]/10" : ""}`}>
+            <div className="flex items-center px-4 py-2.5">
+                <div className="flex-1 min-w-0 pr-4">
                     <div className="flex items-center gap-2">
-                        <p className="font-medium text-[var(--nimmit-text-primary)] truncate group-hover:text-[var(--nimmit-accent-primary)] transition-colors">
+                        <p className="text-sm font-medium text-[var(--nimmit-text-primary)] truncate group-hover:text-[var(--nimmit-accent-primary)] transition-colors">
                             {job.title}
                         </p>
                         {hasRevision && (
-                            <span className="px-1.5 py-0.5 text-[10px] font-semibold text-[var(--nimmit-error)] bg-[var(--nimmit-error)]/10 rounded">
-                                ACTION NEEDED
+                            <span className="px-1.5 py-0.5 text-[10px] font-bold text-[var(--nimmit-error)] border border-[var(--nimmit-error)]/20 rounded">
+                                ACTION REQUIRED
                             </span>
                         )}
+                        {job.priority !== "standard" && <PriorityBadge priority={job.priority} />}
                     </div>
-                    <p className="text-sm text-[var(--nimmit-text-secondary)] flex flex-wrap items-center gap-x-2">
-                        <span className="inline-flex items-center gap-1">
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                            {job.clientId.profile.firstName} {job.clientId.profile.lastName}
-                        </span>
-                        <span className="text-[var(--nimmit-text-tertiary)]">·</span>
+                    <div className="flex items-center gap-2 text-xs text-[var(--nimmit-text-tertiary)] mt-0.5">
+                        <span>{job.clientId.profile.firstName} {job.clientId.profile.lastName}</span>
+                        <span>·</span>
                         <span>{job.category}</span>
-                        <span className="text-[var(--nimmit-text-tertiary)]">·</span>
-                        <span>{new Date(job.createdAt).toLocaleDateString()}</span>
-                    </p>
+                        <span>·</span>
+                        <span>Due {new Date(new Date(job.createdAt).getTime() + 24 * 60 * 60 * 1000).toLocaleDateString()}</span>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2 ml-4">
-                    {job.priority !== "standard" && <PriorityBadge priority={job.priority} />}
+
+                <div className="w-32 flex items-center justify-end">
                     <StatusBadge status={job.status} />
-                    <svg className="w-5 h-5 text-[var(--nimmit-text-tertiary)] group-hover:text-[var(--nimmit-accent-primary)] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
                 </div>
             </div>
         </Link>
     );
 }
 
-// Empty State
-function EmptyState({ icon, message }: { icon: string; message: string }) {
-    const icons: Record<string, React.ReactNode> = {
-        inbox: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />,
-        clipboard: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />,
-    };
-
+// Empty Row
+function EmptyRow({ message }: { message: string }) {
     return (
-        <div className="text-center py-10">
-            <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-[var(--nimmit-bg-secondary)] flex items-center justify-center">
-                <svg className="w-7 h-7 text-[var(--nimmit-text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    {icons[icon] || icons.clipboard}
-                </svg>
-            </div>
-            <p className="text-[var(--nimmit-text-secondary)]">{message}</p>
+        <div className="px-4 py-6 text-center text-sm text-[var(--nimmit-text-tertiary)]">
+            {message}
         </div>
     );
 }
 
-// Skeleton List
-function SkeletonList() {
+// Skeleton Rows
+function SkeletonRows({ count }: { count: number }) {
     return (
-        <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center justify-between p-4 rounded-xl border border-[var(--nimmit-border)]">
-                    <div className="space-y-2 flex-1">
-                        <div className="h-5 w-56 skeleton rounded" />
-                        <div className="h-4 w-40 skeleton rounded" />
+        <>
+            {Array.from({ length: count }).map((_, i) => (
+                <div key={i} className="flex items-center px-4 py-3 border-b border-[var(--nimmit-border)] last:border-0">
+                    <div className="flex-1 space-y-2">
+                        <div className="h-4 w-48 bg-[var(--nimmit-bg-secondary)] rounded animate-pulse" />
+                        <div className="h-3 w-24 bg-[var(--nimmit-bg-secondary)] rounded animate-pulse" />
                     </div>
-                    <div className="h-6 w-24 skeleton rounded-full" />
+                    <div className="h-5 w-20 bg-[var(--nimmit-bg-secondary)] rounded-full animate-pulse" />
                 </div>
             ))}
-        </div>
+        </>
     );
 }
 
-// Badges
+// Status Badge
 function StatusBadge({ status }: { status: string }) {
     const config: Record<string, { className: string; label: string }> = {
-        assigned: { className: "bg-[var(--nimmit-info-bg)] text-[var(--nimmit-info)] border-[var(--nimmit-info)]/20", label: "Assigned" },
-        in_progress: { className: "bg-[var(--nimmit-accent-primary)]/10 text-[var(--nimmit-accent-primary)] border-[var(--nimmit-accent-primary)]/20", label: "In Progress" },
-        review: { className: "bg-[var(--nimmit-info-bg)] text-[var(--nimmit-info)] border-[var(--nimmit-info)]/20", label: "In Review" },
-        revision: { className: "bg-[var(--nimmit-error-bg)] text-[var(--nimmit-error)] border-[var(--nimmit-error)]/20", label: "Needs Revision" },
-        completed: { className: "bg-[var(--nimmit-success-bg)] text-[var(--nimmit-success)] border-[var(--nimmit-success)]/20", label: "Completed" },
+        assigned: { className: "bg-[var(--nimmit-info)]/10 text-[var(--nimmit-info)]", label: "New Assignment" },
+        in_progress: { className: "bg-[var(--nimmit-accent-primary)]/10 text-[var(--nimmit-accent-primary)]", label: "In Progress" },
+        review: { className: "bg-[#8E24AA]/10 text-[#8E24AA]", label: "Review" },
+        revision: { className: "bg-[var(--nimmit-error)]/10 text-[var(--nimmit-error)]", label: "Needs Revision" },
+        completed: { className: "bg-[var(--nimmit-success)]/10 text-[var(--nimmit-success)]", label: "Done" },
     };
     const { className, label } = config[status] || config.assigned;
-    return <Badge variant="outline" className={`px-2.5 py-0.5 text-xs font-medium border rounded-full ${className}`}>{label}</Badge>;
+    return <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full ${className}`}>{label}</span>;
 }
 
+// Priority Badge
 function PriorityBadge({ priority }: { priority: string }) {
-    const config: Record<string, { className: string }> = {
-        rush: { className: "bg-[var(--nimmit-error)]/10 text-[var(--nimmit-error)] border-[var(--nimmit-error)]/20" },
-        express: { className: "bg-[var(--nimmit-warning-bg)] text-[var(--nimmit-warning)] border-[var(--nimmit-warning)]/20" },
+    const config: Record<string, string> = {
+        rush: "bg-[var(--nimmit-error)]/10 text-[var(--nimmit-error)]",
+        express: "bg-[var(--nimmit-warning)]/10 text-[var(--nimmit-warning)]",
     };
-    return <Badge variant="outline" className={`px-2 py-0.5 text-xs border rounded-full ${config[priority]?.className}`}>{priority}</Badge>;
+    return <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full ${config[priority]}`}>{priority}</span>;
 }

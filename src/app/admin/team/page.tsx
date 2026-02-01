@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
+  CardDescription
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -29,9 +29,9 @@ import { toast } from "sonner";
 type SkillLevel = "junior" | "mid" | "senior";
 
 const skillLevelConfig: Record<SkillLevel, { label: string; color: string }> = {
-  junior: { label: "Junior", color: "bg-[var(--nimmit-info-bg)] text-[var(--nimmit-info)] border-[var(--nimmit-info)]/20" },
-  mid: { label: "Mid", color: "bg-[var(--nimmit-warning-bg)] text-[var(--nimmit-warning)] border-[var(--nimmit-warning)]/20" },
-  senior: { label: "Senior", color: "bg-[var(--nimmit-success-bg)] text-[var(--nimmit-success)] border-[var(--nimmit-success)]/20" },
+  junior: { label: "Junior", color: "bg-[var(--nimmit-info)]/10 text-[var(--nimmit-info)] border-[var(--nimmit-info)]/20" },
+  mid: { label: "Mid", color: "bg-[var(--nimmit-warning)]/10 text-[var(--nimmit-warning)] border-[var(--nimmit-warning)]/20" },
+  senior: { label: "Senior", color: "bg-[var(--nimmit-success)]/10 text-[var(--nimmit-success)] border-[var(--nimmit-success)]/20" },
 };
 
 interface WorkerData {
@@ -142,251 +142,222 @@ export default function AdminTeamPage() {
 
   const availableCount = workers.filter((w) => w.workerProfile?.availability === "available").length;
   const busyCount = workers.filter((w) => w.workerProfile?.availability === "busy").length;
-  const offlineCount = workers.filter((w) => w.workerProfile?.availability === "offline").length;
-  const totalCurrentJobs = workers.reduce((sum, w) => sum + (w.workerProfile?.currentJobCount || 0), 0);
-  const totalCapacity = workers.reduce((sum, w) => sum + (w.workerProfile?.maxConcurrentJobs || 3), 0);
+  // const offlineCount = workers.filter((w) => w.workerProfile?.availability === "offline").length;
 
   return (
-    <div className="min-h-screen bg-[var(--nimmit-bg-primary)]">
-      <div className="max-w-7xl mx-auto px-6 py-10 space-y-8">
-        {/* Header */}
-        <div className="animate-fade-up">
-          <h1 className="text-3xl md:text-4xl font-display font-semibold tracking-tight text-[var(--nimmit-text-primary)]">
+    <div className="space-y-4">
+      {/* Compact Header */}
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-display font-semibold text-[var(--nimmit-text-primary)]">
             Team Management
           </h1>
-          <p className="text-[var(--nimmit-text-secondary)] mt-2">
-            Manage your team&apos;s availability and workload
+          <p className="text-sm text-[var(--nimmit-text-tertiary)]">
+            {workers.length} team members
           </p>
         </div>
-
-        {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-5">
-          <StatsCard label="Total" value={workers.length} icon="users" delay={0} />
-          <StatsCard label="Available" value={availableCount} icon="check" color="success" delay={1} />
-          <StatsCard label="Busy" value={busyCount} icon="clock" color="warning" delay={2} />
-          <StatsCard label="Offline" value={offlineCount} icon="offline" color="tertiary" delay={3} />
-          <StatsCard label="Workload" value={`${totalCurrentJobs}/${totalCapacity}`} icon="chart" delay={4} />
-        </div>
-
-        {/* Team Grid */}
-        <Card className="border-[var(--nimmit-border)] shadow-sm animate-fade-up stagger-5">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg font-display">Team Members</CardTitle>
-            <CardDescription>All registered workers and their current status</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <SkeletonGrid />
-            ) : workers.length === 0 ? (
-              <EmptyState />
-            ) : (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {workers.map((worker, i) => (
-                  <WorkerCard
-                    key={worker._id}
-                    worker={worker}
-                    index={i}
-                    onEditSkills={() => openSkillLevelEditor(worker)}
-                    onUpdateAvailability={(av) => updateAvailability(worker._id, av)}
-                  />
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Skill Level Editor Dialog */}
-        <Dialog open={!!editingWorker} onOpenChange={() => setEditingWorker(null)}>
-          <DialogContent className="max-w-md bg-[var(--nimmit-bg-elevated)] border-[var(--nimmit-border)]">
-            <DialogHeader>
-              <DialogTitle className="font-display">
-                Edit Skills - {editingWorker?.profile.firstName} {editingWorker?.profile.lastName}
-              </DialogTitle>
-              <DialogDescription>Set the proficiency level for each skill</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              {editingWorker?.workerProfile?.skills?.map((skill) => (
-                <div key={skill} className="flex items-center justify-between gap-4">
-                  <span className="font-medium text-[var(--nimmit-text-primary)]">{skill}</span>
-                  <Select
-                    value={editingSkillLevels[skill] || "mid"}
-                    onValueChange={(value) =>
-                      setEditingSkillLevels((prev) => ({ ...prev, [skill]: value as SkillLevel }))
-                    }
-                  >
-                    <SelectTrigger className="w-[120px] border-[var(--nimmit-border)]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[var(--nimmit-bg-elevated)] border-[var(--nimmit-border)]">
-                      {(["junior", "mid", "senior"] as SkillLevel[]).map((level) => (
-                        <SelectItem key={level} value={level}>
-                          <span className="flex items-center gap-2">
-                            <span className={`h-2 w-2 rounded-full ${level === "junior" ? "bg-[var(--nimmit-info)]" : level === "mid" ? "bg-[var(--nimmit-warning)]" : "bg-[var(--nimmit-success)]"}`} />
-                            {skillLevelConfig[level].label}
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ))}
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setEditingWorker(null)} className="border-[var(--nimmit-border)]">Cancel</Button>
-              <Button onClick={saveSkillLevels} disabled={savingSkills} className="bg-[var(--nimmit-accent-primary)] hover:bg-[var(--nimmit-accent-primary-hover)]">
-                {savingSkills ? "Saving..." : "Save Changes"}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
+
+      {/* Compact Stats Bar */}
+      <div className="flex items-center gap-6 py-3 px-4 bg-[var(--nimmit-bg-elevated)] rounded-lg border border-[var(--nimmit-border)]">
+        <StatItem label="Total Team" value={workers.length} color="primary" />
+        <div className="w-px h-8 bg-[var(--nimmit-border)]" />
+        <StatItem label="Available" value={availableCount} color="success" />
+        <div className="w-px h-8 bg-[var(--nimmit-border)]" />
+        <StatItem label="Busy" value={busyCount} color="warning" />
+      </div>
+
+      {/* Team List Table */}
+      <div className="bg-[var(--nimmit-bg-elevated)] rounded-lg border border-[var(--nimmit-border)]">
+        <div className="px-4 py-3 border-b border-[var(--nimmit-border)] bg-[var(--nimmit-bg-secondary)]/30 grid grid-cols-12 gap-4 text-xs font-medium text-[var(--nimmit-text-tertiary)] uppercase tracking-wider">
+          <div className="col-span-3">Member</div>
+          <div className="col-span-2">Availability</div>
+          <div className="col-span-4">Skills</div>
+          <div className="col-span-2">Workload</div>
+          <div className="col-span-1 text-right">Rating</div>
+        </div>
+        <div className="divide-y divide-[var(--nimmit-border)]">
+          {loading ? (
+            <SkeletonRows count={5} />
+          ) : workers.length === 0 ? (
+            <EmptyState />
+          ) : (
+            workers.map((worker) => (
+              <WorkerRow
+                key={worker._id}
+                worker={worker}
+                onEditSkills={() => openSkillLevelEditor(worker)}
+                onUpdateAvailability={(av) => updateAvailability(worker._id, av)}
+              />
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Skill Level Editor Dialog */}
+      <Dialog open={!!editingWorker} onOpenChange={() => setEditingWorker(null)}>
+        <DialogContent className="max-w-md bg-[var(--nimmit-bg-elevated)] border-[var(--nimmit-border)]">
+          <DialogHeader>
+            <DialogTitle className="font-display">
+              Edit Skills
+            </DialogTitle>
+            <DialogDescription>
+              {editingWorker?.profile.firstName} {editingWorker?.profile.lastName}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            {editingWorker?.workerProfile?.skills?.map((skill) => (
+              <div key={skill} className="flex items-center justify-between gap-4">
+                <span className="text-sm font-medium text-[var(--nimmit-text-primary)]">{skill}</span>
+                <Select
+                  value={editingSkillLevels[skill] || "mid"}
+                  onValueChange={(value) =>
+                    setEditingSkillLevels((prev) => ({ ...prev, [skill]: value as SkillLevel }))
+                  }
+                >
+                  <SelectTrigger className="w-[110px] h-8 text-xs border-[var(--nimmit-border)]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[var(--nimmit-bg-elevated)] border-[var(--nimmit-border)]">
+                    {(["junior", "mid", "senior"] as SkillLevel[]).map((level) => (
+                      <SelectItem key={level} value={level}>
+                        <span className="flex items-center gap-2 text-xs">
+                          <span className={`h-1.5 w-1.5 rounded-full ${level === "junior" ? "bg-[var(--nimmit-info)]" : level === "mid" ? "bg-[var(--nimmit-warning)]" : "bg-[var(--nimmit-success)]"}`} />
+                          {skillLevelConfig[level].label}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="ghost" size="sm" onClick={() => setEditingWorker(null)}>Cancel</Button>
+            <Button size="sm" onClick={saveSkillLevels} disabled={savingSkills}>
+              {savingSkills ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-// Stats Card
-function StatsCard({ label, value, icon, color, delay }: { label: string; value: string | number; icon: string; color?: "success" | "warning" | "tertiary"; delay: number }) {
-  const icons: Record<string, React.ReactNode> = {
-    users: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />,
-    check: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />,
-    clock: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />,
-    offline: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414" />,
-    chart: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />,
-  };
+// Compact Stat Item
+function StatItem({ label, value, color }: {
+  label: string;
+  value: number;
+  color: "primary" | "success" | "warning";
+}) {
   const colors = {
-    success: { bg: "bg-[var(--nimmit-success)]/10", text: "text-[var(--nimmit-success)]", border: "border-[var(--nimmit-success)]/30" },
-    warning: { bg: "bg-[var(--nimmit-warning)]/10", text: "text-[var(--nimmit-warning)]", border: "" },
-    tertiary: { bg: "bg-[var(--nimmit-bg-secondary)]", text: "text-[var(--nimmit-text-tertiary)]", border: "" },
+    primary: "text-[var(--nimmit-accent-primary)]",
+    success: "text-[var(--nimmit-success)]",
+    warning: "text-[var(--nimmit-warning)]",
   };
-  const c = color ? colors[color] : { bg: "bg-[var(--nimmit-accent-primary)]/10", text: "text-[var(--nimmit-accent-primary)]", border: "" };
 
   return (
-    <Card className={`border-[var(--nimmit-border)] ${c.border} shadow-sm animate-fade-up stagger-${delay + 1}`}>
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardDescription>{label}</CardDescription>
-          <div className={`p-2 rounded-lg ${c.bg}`}>
-            <svg className={`w-5 h-5 ${c.text}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">{icons[icon]}</svg>
-          </div>
-        </div>
-        <CardTitle className={`text-3xl font-display ${c.text}`}>{value}</CardTitle>
-      </CardHeader>
-    </Card>
+    <div className="flex items-center gap-2">
+      <span className={`text-2xl font-semibold font-display ${colors[color]}`}>
+        {value}
+      </span>
+      <span className="text-xs text-[var(--nimmit-text-tertiary)]">{label}</span>
+    </div>
   );
 }
 
-// Worker Card
-function WorkerCard({ worker, index, onEditSkills, onUpdateAvailability }: {
+// Dense Worker Row
+function WorkerRow({ worker, onEditSkills, onUpdateAvailability }: {
   worker: WorkerData;
-  index: number;
   onEditSkills: () => void;
   onUpdateAvailability: (av: "available" | "busy" | "offline") => void;
 }) {
-  const availability = worker.workerProfile?.availability || "offline";
   const currentJobs = worker.workerProfile?.currentJobCount || 0;
   const maxJobs = worker.workerProfile?.maxConcurrentJobs || 3;
   const isAtCapacity = currentJobs >= maxJobs;
 
   return (
-    <div
-      className="p-4 rounded-xl border border-[var(--nimmit-border)] bg-[var(--nimmit-bg-elevated)] hover:shadow-md transition-all"
-      style={{ animationDelay: `${index * 50}ms` }}
-    >
-      {/* Header */}
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-[var(--nimmit-accent-primary)]/10 flex items-center justify-center">
-            <span className="font-medium text-[var(--nimmit-accent-primary)]">
-              {worker.profile.firstName[0]}{worker.profile.lastName[0]}
-            </span>
+    <div className="grid grid-cols-12 gap-4 px-4 py-2.5 items-center hover:bg-[var(--nimmit-bg-secondary)] transition-colors group">
+      {/* Member */}
+      <div className="col-span-3 flex items-center gap-3 overflow-hidden">
+        <div className="w-8 h-8 rounded-full bg-[var(--nimmit-accent-primary)]/10 flex items-center justify-center shrink-0 text-xs font-medium text-[var(--nimmit-accent-primary)]">
+          {worker.profile.firstName[0]}{worker.profile.lastName[0]}
+        </div>
+        <div className="truncate">
+          <div className="text-sm font-medium text-[var(--nimmit-text-primary)] truncate">
+            {worker.profile.firstName} {worker.profile.lastName}
           </div>
-          <div>
-            <p className="font-medium text-[var(--nimmit-text-primary)]">
-              {worker.profile.firstName} {worker.profile.lastName}
-            </p>
-            <p className="text-xs text-[var(--nimmit-text-tertiary)]">{worker.email}</p>
+          <div className="text-xs text-[var(--nimmit-text-tertiary)] truncate">
+            {worker.email}
           </div>
         </div>
-        <Select value={availability} onValueChange={onUpdateAvailability}>
-          <SelectTrigger className="w-[110px] h-8 text-xs border-[var(--nimmit-border)]">
+      </div>
+
+      {/* Availability */}
+      <div className="col-span-2">
+        <Select value={worker.workerProfile?.availability || "offline"} onValueChange={onUpdateAvailability}>
+          <SelectTrigger className="w-[100px] h-7 text-xs border-[var(--nimmit-border)] bg-transparent hover:bg-[var(--nimmit-bg-secondary)]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="bg-[var(--nimmit-bg-elevated)] border-[var(--nimmit-border)]">
-            <SelectItem value="available">
-              <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[var(--nimmit-success)]" /> Available</span>
+            <SelectItem value="available" className="text-xs">
+              <span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-[var(--nimmit-success)]" /> Available</span>
             </SelectItem>
-            <SelectItem value="busy">
-              <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[var(--nimmit-warning)]" /> Busy</span>
+            <SelectItem value="busy" className="text-xs">
+              <span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-[var(--nimmit-warning)]" /> Busy</span>
             </SelectItem>
-            <SelectItem value="offline">
-              <span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-gray-400" /> Offline</span>
+            <SelectItem value="offline" className="text-xs">
+              <span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-gray-400" /> Offline</span>
             </SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {/* Skills */}
-      <div className="mb-3">
-        <div className="flex flex-wrap gap-1 items-center">
-          {worker.workerProfile?.skills?.slice(0, 3).map((skill) => {
-            const level = worker.workerProfile?.skillLevels?.[skill] || "mid";
-            return (
-              <Badge key={skill} variant="outline" className={`text-xs ${skillLevelConfig[level].color}`} title={`${skill} - ${skillLevelConfig[level].label}`}>
-                {skill}
-              </Badge>
-            );
-          })}
-          {(worker.workerProfile?.skills?.length || 0) > 3 && (
-            <Badge variant="outline" className="text-xs border-[var(--nimmit-border)]">
-              +{(worker.workerProfile?.skills?.length || 0) - 3}
+      <div className="col-span-4 flex items-center gap-1 flex-wrap">
+        {worker.workerProfile?.skills?.slice(0, 2).map((skill) => {
+          const level = worker.workerProfile?.skillLevels?.[skill] || "mid";
+          return (
+            <Badge key={skill} variant="outline" className={`h-5 px-1.5 text-[10px] font-normal ${skillLevelConfig[level].color}`}>
+              {skill}
             </Badge>
-          )}
-          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs text-[var(--nimmit-text-tertiary)]" onClick={onEditSkills}>
-            Edit
-          </Button>
+          );
+        })}
+        {(worker.workerProfile?.skills?.length || 0) > 2 && (
+          <span className="text-[10px] text-[var(--nimmit-text-tertiary)] ml-1">
+            +{(worker.workerProfile?.skills?.length || 0) - 2} more
+          </span>
+        )}
+        <button onClick={onEditSkills} className="opacity-0 group-hover:opacity-100 transition-opacity ml-2">
+          <svg className="w-3.5 h-3.5 text-[var(--nimmit-text-tertiary)] hover:text-[var(--nimmit-text-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Workload */}
+      <div className="col-span-2 text-sm flex items-center">
+        <span className={`${isAtCapacity ? "text-[var(--nimmit-error)] font-medium" : "text-[var(--nimmit-text-primary)]"}`}>
+          {currentJobs}
+        </span>
+        <span className="text-[var(--nimmit-text-tertiary)] mx-1">/</span>
+        <span className="text-[var(--nimmit-text-tertiary)]">{maxJobs}</span>
+        <div className="w-16 h-1.5 bg-[var(--nimmit-bg-secondary)] rounded-full ml-3 overflow-hidden hidden xl:block">
+          <div
+            className={`h-full rounded-full ${isAtCapacity ? "bg-[var(--nimmit-error)]" : "bg-[var(--nimmit-accent-primary)]"}`}
+            style={{ width: `${Math.min((currentJobs / maxJobs) * 100, 100)}%` }}
+          />
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="flex items-center justify-between text-sm">
-        <div className="flex items-center gap-4">
-          <div>
-            <span className="text-[var(--nimmit-text-tertiary)]">Jobs: </span>
-            <span className={isAtCapacity ? "text-[var(--nimmit-error)] font-medium" : ""}>{currentJobs}/{maxJobs}</span>
-          </div>
-          <div>
-            <span className="text-[var(--nimmit-text-tertiary)]">Done: </span>
-            <span>{worker.workerProfile?.stats?.completedJobs || 0}</span>
-          </div>
-        </div>
-        {worker.workerProfile?.stats?.avgRating && (
-          <span className="text-yellow-500">{worker.workerProfile.stats.avgRating.toFixed(1)} ★</span>
+      {/* Rating */}
+      <div className="col-span-1 text-right text-sm">
+        {worker.workerProfile?.stats?.avgRating ? (
+          <span className="text-yellow-500 font-medium">{worker.workerProfile.stats.avgRating.toFixed(1)}</span>
+        ) : (
+          <span className="text-[var(--nimmit-text-tertiary)]">-</span>
         )}
       </div>
-    </div>
-  );
-}
-
-// Skeleton Grid
-function SkeletonGrid() {
-  return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {[1, 2, 3, 4, 5, 6].map((i) => (
-        <div key={i} className="p-4 rounded-xl border border-[var(--nimmit-border)]">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 skeleton rounded-full" />
-            <div className="space-y-2">
-              <div className="h-4 w-32 skeleton rounded" />
-              <div className="h-3 w-24 skeleton rounded" />
-            </div>
-          </div>
-          <div className="flex gap-1 mb-3">
-            <div className="h-5 w-16 skeleton rounded-full" />
-            <div className="h-5 w-16 skeleton rounded-full" />
-          </div>
-          <div className="h-4 w-full skeleton rounded" />
-        </div>
-      ))}
     </div>
   );
 }
@@ -394,14 +365,21 @@ function SkeletonGrid() {
 // Empty State
 function EmptyState() {
   return (
-    <div className="text-center py-12">
-      <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[var(--nimmit-bg-secondary)] flex items-center justify-center">
-        <svg className="w-8 h-8 text-[var(--nimmit-text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-        </svg>
-      </div>
-      <h3 className="text-lg font-medium text-[var(--nimmit-text-primary)] mb-2">No team members yet</h3>
-      <p className="text-[var(--nimmit-text-secondary)]">Workers will appear here when they register.</p>
+    <div className="py-12 text-center text-[var(--nimmit-text-tertiary)] text-sm">
+      No team members found
     </div>
+  );
+}
+
+// Skeleton Rows
+function SkeletonRows({ count }: { count: number }) {
+  return (
+    <>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="px-4 py-3 border-b border-[var(--nimmit-border)]">
+          <div className="h-5 bg-[var(--nimmit-bg-secondary)] rounded animate-pulse w-full" />
+        </div>
+      ))}
+    </>
   );
 }

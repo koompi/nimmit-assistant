@@ -35,6 +35,11 @@ export function useJobPolling({
   const [error, setError] = useState<string | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const failedAttempts = useRef(0);
+  // Use ref for onUpdate to avoid it being a dependency that triggers re-fetches
+  const onUpdateRef = useRef(onUpdate);
+  useEffect(() => {
+    onUpdateRef.current = onUpdate;
+  }, [onUpdate]);
 
   const fetchJob = useCallback(async () => {
     if (!jobId) return;
@@ -47,13 +52,21 @@ export function useJobPolling({
       const data = await response.json();
       if (data.success && data.data) {
         const newJob = data.data as Job;
-        setJob(newJob);
+
+        // Only trigger update if data actually changed or it's the first load
+        // Simply setting state will trigger re-render if value is different (by ref equality usually, but here it's a new object)
+        setJob(prev => {
+          // Optional: simple deep equal check or just update. 
+          // For now, we update to ensure UI is fresh.
+          if (JSON.stringify(prev) !== JSON.stringify(newJob)) {
+            onUpdateRef.current?.(newJob);
+            return newJob;
+          }
+          return prev;
+        });
+
         setError(null);
         failedAttempts.current = 0;
-
-        if (onUpdate) {
-          onUpdate(newJob);
-        }
       }
     } catch (err) {
       failedAttempts.current++;
@@ -71,20 +84,21 @@ export function useJobPolling({
     } finally {
       setIsLoading(false);
     }
-  }, [jobId, onUpdate]);
+  }, [jobId]); // onUpdate is removed from dependencies
 
   const refetch = useCallback(async () => {
     setIsLoading(true);
     await fetchJob();
   }, [fetchJob]);
 
+  // Initial fetch
   useEffect(() => {
-    // Initial fetch
     if (enabled && jobId && !initialJob) {
       fetchJob();
     }
   }, [enabled, jobId, fetchJob, initialJob]);
 
+  // Polling effect
   useEffect(() => {
     // Don't poll if disabled or no jobId
     if (!enabled || !jobId) return;

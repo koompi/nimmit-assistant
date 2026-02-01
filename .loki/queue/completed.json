@@ -167,5 +167,61 @@
     "description": "Implement scheduled tasks (rating aggregation, briefing cleanup)",
     "status": "completed",
     "completed_at": "2026-01-31T21:43:00+07:00"
+  },
+  {
+    "id": "s6-001",
+    "sprint": 6,
+    "description": "QA Automation - image resolution, video codec, PDF integrity checks",
+    "status": "completed",
+    "completed_at": "2026-02-01T22:30:00+07:00"
+  },
+  {
+    "id": "s6-002",
+    "sprint": 6,
+    "description": "Real-Time Notifications with SSE - job status, messages, assignments",
+    "status": "completed",
+    "completed_at": "2026-02-01T23:00:00+07:00"
+  },
+  {
+    "id": "s6-003",
+    "sprint": 6,
+    "description": "Admin Analytics Dashboard - metrics, charts, worker utilization",
+    "status": "completed",
+    "completed_at": "2026-02-01T23:30:00+07:00"
+  },
+  {
+    "id": "s6-004",
+    "sprint": 6,
+    "description": "Email notification preferences - user settings UI",
+    "status": "completed",
+    "completed_at": "2026-02-01T23:45:00+07:00"
+  },
+  {
+    "id": "s7-004",
+    "sprint": 7,
+    "description": "Client Onboarding Flow - multi-step wizard with company info, task preferences",
+    "status": "completed",
+    "completed_at": "2026-02-01T10:00:00+07:00"
+  },
+  {
+    "id": "s7-001",
+    "sprint": 7,
+    "description": "Audit Logging - Admin viewer UI, job/payment event logging integration",
+    "status": "completed",
+    "completed_at": "2026-02-01T10:30:00+07:00"
+  },
+  {
+    "id": "s7-002",
+    "sprint": 7,
+    "description": "Worker Performance Reports - Weekly/monthly stats with PDF export",
+    "status": "completed",
+    "completed_at": "2026-02-01T10:45:00+07:00"
+  },
+  {
+    "id": "s7-003",
+    "sprint": 7,
+    "description": "Payout Processing - Stripe Connect transfers with audit logging",
+    "status": "completed",
+    "completed_at": "2026-02-01T11:00:00+07:00"
   }
 ]

@@ -13,6 +13,7 @@ import type { User as NextAuthUser } from "next-auth";
  * Only used in Node.js environment (API routes, server components)
  */
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  trustHost: true,
   ...authConfig,
   providers: [
     // KID (KOOMPI ID) OAuth
@@ -71,4 +72,85 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
   ],
+  callbacks: {
+    ...authConfig.callbacks,
+    async signIn({ user, account }) {
+      if (account?.provider === "kid") {
+        // Debug logging for KID provider
+        console.log("KID signIn callback - user object:", JSON.stringify(user, null, 2));
+
+        // Validate email exists before proceeding
+        if (!user.email) {
+          console.error("KID signIn error: email is missing from user object", { user, account });
+          return false; // Deny sign-in if email is missing
+        }
+
+        try {
+          await connectDB();
+          const existingUser = await User.findOne({ email: user.email });
+
+          if (!existingUser) {
+            // Create user from KID profile
+            const randomPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+            const passwordHash = await bcrypt.hash(randomPassword, 10);
+
+            const nameParts = user.name?.split(" ") || ["User", ""];
+            const firstName = nameParts[0] || "User";
+            const lastName = nameParts.slice(1).join(" ") || "Client";
+
+            await User.create({
+              email: user.email,
+              passwordHash,
+              role: "client", // Default to client for external sign-ups
+              isActive: true,
+              profile: {
+                firstName,
+                lastName,
+                avatar: user.image || "",
+              },
+              clientProfile: {
+                totalJobs: 0,
+                totalSpent: 0,
+                billing: {
+                  credits: 0,
+                  rolloverCredits: 0,
+                },
+              },
+            });
+            console.log(`Created new user from KID: ${user.email}`);
+          }
+        } catch (error) {
+          console.error("Error syncing KID user:", error);
+          return false;
+        }
+      }
+      return true;
+    },
+    async jwt({ token, user, account }) {
+      if (user) {
+        // Initial sign in
+        if (account?.provider === "kid") {
+          // For KID, we need to fetch the local database ID
+          // because KID provider returns its own UUID
+          try {
+            await connectDB();
+            const dbUser = await User.findOne({ email: user.email });
+            if (dbUser) {
+              token.id = dbUser._id.toString();
+              token.role = dbUser.role;
+              token.avatar = dbUser.profile.avatar;
+            }
+          } catch (error) {
+            console.error("Error fetching local user for JWT:", error);
+          }
+        } else {
+          // For credentials, user.id is already the db ID
+          token.id = user.id;
+          token.role = user.role;
+          token.avatar = user.avatar;
+        }
+      }
+      return token;
+    },
+  },
 });

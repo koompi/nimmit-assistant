@@ -1,23 +1,14 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { FileList } from "@/components/job/file-list";
+import { ArrowLeft, Clock, Paperclip, Send, Star, AlertCircle, CheckCircle } from "lucide-react";
 import { useJobPolling } from "@/hooks/useJobPolling";
 import type { Job, JobMessage } from "@/types";
 
@@ -30,694 +21,264 @@ interface JobWithPopulated extends Omit<Job, "workerId" | "messages"> {
     messages: Array<JobMessage & { senderRole: string }>;
 }
 
-const completeJobSchema = z.object({
-    rating: z.number().min(1).max(5),
-    feedback: z.string().max(2000).optional(),
-});
-
-type CompleteJobInput = z.infer<typeof completeJobSchema>;
-
 export default function ClientJobDetailPage() {
     const params = useParams();
     const router = useRouter();
     const [message, setMessage] = useState("");
-    const [completing, setCompleting] = useState(false);
-    const [showRating, setShowRating] = useState(false);
-    const [previousStatus, setPreviousStatus] = useState<string | null>(null);
-
-    const {
-        job,
-        isLoading: loading,
-        error,
-        refetch,
-    } = useJobPolling({
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const [rating, setRating] = useState(0);
+    const { job, isLoading, error, refetch } = useJobPolling({
         jobId: params.id as string,
         interval: 5000,
-        onUpdate: useCallback((updatedJob: { status: string }) => {
-            if (previousStatus && previousStatus !== updatedJob.status) {
-                const statusMessages: Record<string, string> = {
-                    assigned: "Your task has been assigned to an assistant!",
-                    in_progress: "Your assistant has started working on your task",
-                    review: "Your task is ready for review!",
-                    completed: "Task completed!",
-                    revision: "Revision in progress",
-                };
-                const msg = statusMessages[updatedJob.status];
-                if (msg) {
-                    toast.success(msg);
-                }
-            }
-            setPreviousStatus(updatedJob.status);
-        }, [previousStatus]),
+        onUpdate: (updatedJob) => {
+            if (updatedJob.status === 'completed') toast.success("Job completed!");
+        }
     });
+
+    const typedJob = job as JobWithPopulated | null;
 
     useEffect(() => {
-        if (job && !previousStatus) {
-            setPreviousStatus(job.status);
-        }
-    }, [job, previousStatus]);
-
-    const {
-        register,
-        handleSubmit,
-        setValue,
-        watch,
-        formState: { errors },
-    } = useForm<CompleteJobInput>({
-        resolver: zodResolver(completeJobSchema),
-    });
-
-    const selectedRating = watch("rating");
-    const typedJob = job as JobWithPopulated | null;
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [typedJob?.messages]);
 
     const sendMessage = async () => {
         if (!message.trim()) return;
         try {
-            const response = await fetch(`/api/jobs/${params.id}`, {
+            await fetch(`/api/jobs/${params.id}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ action: "addMessage", message: message.trim() }),
             });
-            const data = await response.json();
-            if (data.success) {
-                await refetch();
-                setMessage("");
-                toast.success("Message sent");
-            } else {
-                toast.error(data.error?.message || "Failed to send message");
-            }
-        } catch (err) {
-            console.error("Failed to send message:", err);
+            refetch();
+            setMessage("");
+        } catch {
             toast.error("Failed to send message");
         }
     };
 
-    const requestRevision = async () => {
-        if (!message.trim()) {
-            toast.error("Please provide feedback for the revision");
-            return;
-        }
+    const completeJob = async () => {
+        if (rating === 0) return toast.error("Please rate the job first");
         try {
             await fetch(`/api/jobs/${params.id}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ action: "addMessage", message: `Revision requested: ${message.trim()}` }),
+                body: JSON.stringify({ action: "complete", rating }),
             });
-            const response = await fetch(`/api/jobs/${params.id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ action: "updateStatus", status: "revision" }),
-            });
-            const data = await response.json();
-            if (data.success) {
-                await refetch();
-                setMessage("");
-                toast.success("Revision requested");
-            } else {
-                toast.error(data.error?.message || "Failed to request revision");
-            }
-        } catch (err) {
-            console.error("Failed to request revision:", err);
-            toast.error("Failed to request revision");
+            refetch();
+            toast.success("Job marked as complete");
+        } catch {
+            toast.error("Failed to complete");
         }
     };
 
-    const onCompleteSubmit = async (data: CompleteJobInput) => {
-        setCompleting(true);
-        try {
-            const response = await fetch(`/api/jobs/${params.id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ action: "complete", rating: data.rating, feedback: data.feedback }),
-            });
-            const result = await response.json();
-            if (result.success) {
-                await refetch();
-                setShowRating(false);
-                toast.success("Job completed! Thank you for your feedback.");
-            } else {
-                toast.error(result.error?.message || "Failed to complete job");
-            }
-        } catch (err) {
-            console.error("Failed to complete job:", err);
-            toast.error("Failed to complete job");
-        } finally {
-            setCompleting(false);
-        }
-    };
-
-    const cancelJob = async () => {
-        if (!confirm("Are you sure you want to cancel this job?")) return;
-        try {
-            const response = await fetch(`/api/jobs/${params.id}`, { method: "DELETE" });
-            const data = await response.json();
-            if (data.success) {
-                toast.success("Job cancelled");
-                router.push("/client/jobs");
-            } else {
-                toast.error(data.error?.message || "Failed to cancel job");
-            }
-        } catch (err) {
-            console.error("Failed to cancel job:", err);
-            toast.error("Failed to cancel job");
-        }
-    };
-
-    if (loading) {
-        return <LoadingSkeleton />;
-    }
-
-    if (error || !typedJob) {
-        return (
-            <div className="min-h-screen bg-[var(--nimmit-bg-primary)] flex items-center justify-center p-4">
-                <Card className="max-w-md w-full border-[var(--nimmit-border)]">
-                    <CardContent className="pt-6 text-center">
-                        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--nimmit-error-bg)] flex items-center justify-center">
-                            <svg className="w-8 h-8 text-[var(--nimmit-error)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
-                        </div>
-                        <h3 className="text-lg font-medium text-[var(--nimmit-text-primary)] mb-2">{error || "Job not found"}</h3>
-                        <Button variant="outline" className="mt-4" onClick={() => router.back()}>Go Back</Button>
-                    </CardContent>
-                </Card>
-            </div>
-        );
-    }
+    if (isLoading) return <div className="p-8 text-sm text-[var(--nimmit-text-tertiary)]">Loading task...</div>;
+    if (error || !typedJob) return <div className="p-8 text-sm text-[var(--nimmit-error)]">Job not found</div>;
 
     return (
-        <div className="min-h-screen bg-[var(--nimmit-bg-primary)] pb-20">
-            <div className="max-w-6xl mx-auto px-6 py-10">
-                {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-8 animate-fade-up">
-                    <div>
-                        <button
-                            onClick={() => router.back()}
-                            className="inline-flex items-center gap-1 text-sm text-[var(--nimmit-text-secondary)] hover:text-[var(--nimmit-accent-primary)] transition-colors mb-3"
-                        >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                            </svg>
-                            Back to Tasks
-                        </button>
-                        <h1 className="text-2xl md:text-3xl font-display font-semibold tracking-tight text-[var(--nimmit-text-primary)]">
-                            {typedJob.title}
-                        </h1>
-                        {typedJob.workerId && (
-                            <p className="text-[var(--nimmit-text-secondary)] mt-1 flex items-center gap-2">
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
-                                Assigned to {typedJob.workerId.profile.firstName} {typedJob.workerId.profile.lastName}
-                            </p>
-                        )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                        {typedJob.priority !== "standard" && <PriorityBadge priority={typedJob.priority} />}
-                        <StatusBadge status={typedJob.status} />
-                    </div>
-                </div>
-
-                {/* Main Content */}
-                <div className="grid gap-6 lg:grid-cols-3">
-                    <div className="lg:col-span-2 space-y-6">
-                        {/* Description Card */}
-                        <Card className="border-[var(--nimmit-border)] shadow-soft-sm animate-fade-up stagger-1">
-                            <CardHeader className="pb-3">
-                                <CardTitle className="text-lg font-display">Description</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="whitespace-pre-wrap text-[var(--nimmit-text-primary)] leading-relaxed">{typedJob.description}</p>
-                            </CardContent>
-                        </Card>
-
-                        {/* QA Result Card */}
-                        {(typedJob.status === "review" || typedJob.status === "completed") && (
-                            <QAResultCard />
-                        )}
-
-                        {/* Review Actions */}
-                        {typedJob.status === "review" && !showRating && (
-                            <ReviewCard
-                                message={message}
-                                setMessage={setMessage}
-                                onApprove={() => setShowRating(true)}
-                                onRevision={requestRevision}
-                            />
-                        )}
-
-                        {/* Rating Form */}
-                        {showRating && (
-                            <RatingCard
-                                selectedRating={selectedRating}
-                                onSetRating={(star) => setValue("rating", star)}
-                                onSubmit={handleSubmit(onCompleteSubmit)}
-                                onCancel={() => setShowRating(false)}
-                                completing={completing}
-                                register={register}
-                                errors={errors}
-                            />
-                        )}
-
-                        {/* Completed Card */}
-                        {typedJob.status === "completed" && (
-                            <CompletedCard job={typedJob} />
-                        )}
-
-                        {/* Files */}
-                        {(typedJob.files.length > 0 || typedJob.deliverables.length > 0) && (
-                            <Card className="border-[var(--nimmit-border)] shadow-soft-sm animate-fade-up stagger-2">
-                                <CardHeader className="pb-3">
-                                    <CardTitle className="text-lg font-display">Files</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-6">
-                                    {typedJob.files.length > 0 && (
-                                        <FileList files={typedJob.files} title="Reference Files" emptyMessage="No reference files" />
-                                    )}
-                                    {typedJob.deliverables.length > 0 && (
-                                        <FileList files={typedJob.deliverables} title="Deliverables" emptyMessage="No deliverables yet" />
-                                    )}
-                                </CardContent>
-                            </Card>
-                        )}
-
-                        {/* Messages */}
-                        <MessagesCard
-                            messages={typedJob.messages}
-                            status={typedJob.status}
-                            message={message}
-                            setMessage={setMessage}
-                            onSend={sendMessage}
-                        />
-                    </div>
-
-                    {/* Sidebar */}
-                    <div className="space-y-6">
-                        {/* Context Cloud Component */}
-                        <ContextCloudCard />
-
-                        <DetailsCard job={typedJob} />
-                        {typedJob.workerId && <AssistantCard worker={typedJob.workerId} />}
-                        {(typedJob.status === "pending" || typedJob.status === "assigned") && (
-                            <ActionsCard onCancel={cancelJob} />
-                        )}
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-// Loading Skeleton
-function LoadingSkeleton() {
-    return (
-        <div className="min-h-screen bg-[var(--nimmit-bg-primary)]">
-            <div className="max-w-6xl mx-auto px-6 py-10">
-                <div className="space-y-4 mb-8">
-                    <div className="h-4 w-24 skeleton rounded" />
-                    <div className="h-8 w-96 skeleton rounded" />
-                    <div className="h-4 w-48 skeleton rounded" />
-                </div>
-                <div className="grid gap-6 lg:grid-cols-3">
-                    <div className="lg:col-span-2 space-y-6">
-                        <div className="h-48 skeleton rounded-xl" />
-                        <div className="h-64 skeleton rounded-xl" />
-                    </div>
-                    <div className="space-y-6">
-                        <div className="h-48 skeleton rounded-xl" />
-                        <div className="h-32 skeleton rounded-xl" />
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-// Context Cloud Card
-function ContextCloudCard() {
-    return (
-        <Card className="border-indigo-100 bg-[#EEF2FF] shadow-soft-sm animate-fade-up">
-            <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <div className="p-1.5 rounded-md bg-indigo-100/50">
-                            <svg className="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                            </svg>
-                        </div>
-                        <CardTitle className="text-lg font-display text-indigo-950">Context Cloud</CardTitle>
-                    </div>
-                    <Badge variant="secondary" className="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 border-none">
-                        High Confidence
-                    </Badge>
-                </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <p className="text-sm text-indigo-900/80 leading-relaxed">
-                    Nimmit's AI has retrieved relevant context from your institutional memory to help your assistant.
-                </p>
-                <div className="space-y-2">
-                    {[
-                        { title: "Brand Voice Guidelines.pdf", type: "PDF", relevance: "98%" },
-                        { title: "Previous Landing Page Copy", type: "Task", relevance: "92%" },
-                        { title: "Preferred Color Palette", type: "Note", relevance: "85%" }
-                    ].map((item, i) => (
-                        <div key={i} className="flex items-center gap-3 p-2.5 rounded-[var(--nimmit-radius-lg)] bg-white border border-indigo-100/50 hover:border-indigo-200 transition-colors cursor-default">
-                            <div className="w-8 h-8 rounded bg-indigo-50 flex items-center justify-center text-indigo-500">
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-indigo-950 truncate">{item.title}</p>
-                                <div className="flex items-center gap-2 text-xs text-indigo-900/60">
-                                    <span>{item.type}</span>
-                                    <span>•</span>
-                                    <span className="text-indigo-600 font-medium">{item.relevance} match</span>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </CardContent>
-        </Card>
-    )
-}
-
-// QA Result Card
-function QAResultCard() {
-    return (
-        <Card className="border-[var(--nimmit-success)]/30 bg-[var(--nimmit-success-bg)]/10 shadow-soft-sm animate-fade-up">
-            <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-[var(--nimmit-success)]/20 flex items-center justify-center">
-                        <svg className="w-4 h-4 text-[var(--nimmit-success)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    <div>
-                        <CardTitle className="text-lg font-display text-[var(--nimmit-success)]">Quality Assurance Passed</CardTitle>
-                        <CardDescription>Automated checks completed successfully</CardDescription>
-                    </div>
-                </div>
-            </CardHeader>
-            <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {[
-                        "Grammar & Spelling Check",
-                        "Link Validity Verification",
-                        "Brand Voice Compliance",
-                        "File Integrity Scan"
-                    ].map((check, i) => (
-                        <div key={i} className="flex items-center gap-2 text-sm text-[var(--nimmit-text-secondary)]">
-                            <svg className="w-4 h-4 text-[var(--nimmit-success)] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                            {check}
-                        </div>
-                    ))}
-                </div>
-            </CardContent>
-        </Card>
-    )
-}
-
-// Review Card
-function ReviewCard({ message, setMessage, onApprove, onRevision }: {
-    message: string;
-    setMessage: (m: string) => void;
-    onApprove: () => void;
-    onRevision: () => void;
-}) {
-    return (
-        <Card className="border-[var(--nimmit-success)]/30 bg-[var(--nimmit-success-bg)]/30 shadow-soft-sm animate-fade-up">
-            <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-[var(--nimmit-success)]/20 flex items-center justify-center">
-                        <svg className="w-4 h-4 text-[var(--nimmit-success)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                    </div>
-                    <div>
-                        <CardTitle className="text-lg font-display text-[var(--nimmit-success)]">Ready for Review!</CardTitle>
-                        <CardDescription>Your assistant has submitted this task</CardDescription>
-                    </div>
-                </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <div className="flex gap-3">
-                    <Button onClick={onApprove} className="flex-1 bg-[var(--nimmit-success)] hover:bg-[var(--nimmit-success)]/90 shadow-soft-sm">
-                        <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        Approve & Complete
+        <div className="flex flex-col h-[calc(100vh-64px)] overflow-hidden bg-white">
+            {/* Header */}
+            <div className="flex items-center justify-between gap-4 border-b border-[var(--nimmit-border)] px-4 py-3 bg-white shrink-0">
+                <div className="flex items-center gap-3 overflow-hidden">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => router.push('/client/jobs')}>
+                        <ArrowLeft className="w-4 h-4" />
                     </Button>
-                    <Button variant="outline" onClick={onRevision} disabled={!message.trim()} className="flex-1 border-[var(--nimmit-border)]">
-                        <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        Request Revision
-                    </Button>
+                    <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs text-[var(--nimmit-text-tertiary)] shrink-0">#{typedJob._id.toString().slice(-6)}</span>
+                            <h1 className="text-sm font-bold text-[var(--nimmit-text-primary)] truncate max-w-[400px]">{typedJob.title}</h1>
+                            <StatusBadge status={typedJob.status} />
+                        </div>
+                    </div>
                 </div>
-                <Textarea
-                    placeholder="Add feedback or revision notes..."
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    rows={2}
-                    className="bg-white border-[var(--nimmit-border)]"
-                />
-            </CardContent>
-        </Card>
-    );
-}
-
-// Rating Card
-function RatingCard({ selectedRating, onSetRating, onSubmit, onCancel, completing, register, errors }: {
-    selectedRating: number;
-    onSetRating: (star: number) => void;
-    onSubmit: () => void;
-    onCancel: () => void;
-    completing: boolean;
-    register: ReturnType<typeof useForm<CompleteJobInput>>["register"];
-    errors: ReturnType<typeof useForm<CompleteJobInput>>["formState"]["errors"];
-}) {
-    return (
-        <Card className="border-[var(--nimmit-success)]/30 bg-[var(--nimmit-success-bg)]/30 shadow-soft-sm animate-scale-in">
-            <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-display">Rate this Task</CardTitle>
-                <CardDescription>How would you rate the delivery?</CardDescription>
-            </CardHeader>
-            <form onSubmit={onSubmit}>
-                <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                        <Label>Rating</Label>
-                        <div className="flex gap-1">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                                <button
-                                    key={star}
-                                    type="button"
-                                    onClick={() => onSetRating(star)}
-                                    className={`text-3xl transition-transform hover:scale-110 ${selectedRating >= star ? "text-yellow-400" : "text-gray-300"}`}
-                                >
-                                    ★
-                                </button>
+                {/* Review Controls (Header Level if applicable, or keep in sidebar) */}
+                {typedJob.status === 'review' && (
+                    <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
+                            {[1, 2, 3, 4, 5].map(s => (
+                                <Star
+                                    key={s}
+                                    className={`w-4 h-4 cursor-pointer ${rating >= s ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+                                    onClick={() => setRating(s)}
+                                />
                             ))}
                         </div>
-                        {errors.rating && <p className="text-sm text-[var(--nimmit-error)]">Please select a rating</p>}
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="feedback">Feedback <span className="text-[var(--nimmit-text-tertiary)]">(optional)</span></Label>
-                        <Textarea id="feedback" placeholder="Any additional feedback..." {...register("feedback")} rows={3} className="bg-white border-[var(--nimmit-border)]" />
-                    </div>
-                    <div className="flex gap-3">
-                        <Button type="button" variant="outline" onClick={onCancel} className="border-[var(--nimmit-border)]">Cancel</Button>
-                        <Button type="submit" disabled={completing} className="flex-1 bg-[var(--nimmit-success)] hover:bg-[var(--nimmit-success)]/90">
-                            {completing ? "Submitting..." : "Complete Task"}
+                        <Button size="sm" onClick={completeJob} disabled={rating === 0} className="h-7 text-xs bg-green-600 hover:bg-green-700 text-white ml-2">
+                            Approve & Complete
                         </Button>
                     </div>
-                </CardContent>
-            </form>
-        </Card>
-    );
-}
+                )}
+            </div>
 
-// Completed Card
-function CompletedCard({ job }: { job: JobWithPopulated }) {
-    return (
-        <Card className="border-[var(--nimmit-success)]/30 bg-[var(--nimmit-success-bg)]/50 shadow-soft-sm animate-fade-up">
-            <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-[var(--nimmit-success)]/20 flex items-center justify-center">
-                        <svg className="w-5 h-5 text-[var(--nimmit-success)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    <div>
-                        <CardTitle className="text-lg font-display text-[var(--nimmit-success)]">Task Completed!</CardTitle>
-                        <CardDescription>Completed on {new Date(job.completedAt!).toLocaleDateString()}</CardDescription>
-                    </div>
-                </div>
-            </CardHeader>
-            {job.rating && (
-                <CardContent>
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm text-[var(--nimmit-text-secondary)]">Your rating:</span>
-                        <span className="text-yellow-400 text-xl">{"★".repeat(job.rating)}{"☆".repeat(5 - job.rating)}</span>
-                    </div>
-                    {job.feedback && <p className="mt-2 text-sm text-[var(--nimmit-text-secondary)] italic">&ldquo;{job.feedback}&rdquo;</p>}
-                </CardContent>
-            )}
-        </Card>
-    );
-}
+            {/* Main Layout: Flex Row */}
+            <div className="flex flex-1 overflow-hidden">
 
-// Messages Card
-function MessagesCard({ messages, status, message, setMessage, onSend }: {
-    messages: JobWithPopulated["messages"];
-    status: string;
-    message: string;
-    setMessage: (m: string) => void;
-    onSend: () => void;
-}) {
-    const canMessage = !["completed", "cancelled", "pending"].includes(status);
+                {/* 1. Main Chat Area - Centered & Focused */}
+                <div className="flex-1 flex flex-col items-center overflow-hidden">
+                    <div className="w-full flex flex-col h-full bg-white">
 
-    return (
-        <Card className="border-[var(--nimmit-border)] shadow-soft-sm animate-fade-up stagger-3">
-            <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-display">Messages</CardTitle>
-                <CardDescription>Communication with your assistant</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                {messages.length === 0 ? (
-                    <div className="text-center py-8">
-                        <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-[var(--nimmit-bg-secondary)] flex items-center justify-center">
-                            <svg className="w-6 h-6 text-[var(--nimmit-text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                            </svg>
-                        </div>
-                        <p className="text-[var(--nimmit-text-secondary)]">No messages yet</p>
-                    </div>
-                ) : (
-                    <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
-                        {messages.map((msg) => (
-                            <div key={msg.id} className={`p-3 rounded-xl ${msg.senderRole === "client" ? "bg-[var(--nimmit-accent-primary)]/10 ml-8" : "bg-[var(--nimmit-bg-secondary)] mr-8"}`}>
-                                <div className="flex justify-between text-xs text-[var(--nimmit-text-tertiary)] mb-1">
-                                    <span className="font-medium">{msg.senderRole === "client" ? "You" : "Assistant"}</span>
-                                    <span>{new Date(msg.timestamp).toLocaleString()}</span>
-                                </div>
-                                <p className="text-sm text-[var(--nimmit-text-primary)]">{msg.message}</p>
+                        {/* Messages Area */}
+                        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                            {/* Specifications Summary (Pinned at top of chat) */}
+                            <div className="bg-gray-50 rounded-lg p-4 border border-gray-100 mb-6 text-sm">
+                                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                    <AlertCircle className="w-3 h-3" /> Brief
+                                </h3>
+                                <p className="text-gray-700 leading-relaxed font-serif">{typedJob.description}</p>
                             </div>
-                        ))}
-                    </div>
-                )}
-                {canMessage && (
-                    <div className="flex gap-2 pt-4 border-t border-[var(--nimmit-border)]">
-                        <Textarea placeholder="Type a message..." value={message} onChange={(e) => setMessage(e.target.value)} rows={2} className="bg-[var(--nimmit-bg-elevated)] border-[var(--nimmit-border)]" />
-                        <Button onClick={onSend} disabled={!message.trim()} className="bg-[var(--nimmit-accent-primary)] hover:bg-[var(--nimmit-accent-primary-hover)]">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                            </svg>
-                        </Button>
-                    </div>
-                )}
-            </CardContent>
-        </Card>
-    );
-}
 
-// Details Card
-function DetailsCard({ job }: { job: JobWithPopulated }) {
-    const details = [
-        { label: "Category", value: job.category, icon: "M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" },
-        { label: "Created", value: new Date(job.createdAt).toLocaleDateString(), icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" },
-        job.assignedAt && { label: "Assigned", value: new Date(job.assignedAt).toLocaleDateString(), icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" },
-        job.startedAt && { label: "Started", value: new Date(job.startedAt).toLocaleDateString(), icon: "M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" },
-        job.completedAt && { label: "Completed", value: new Date(job.completedAt).toLocaleDateString(), icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" },
-        job.estimatedHours && { label: "Est. Hours", value: `${job.estimatedHours} hours`, icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" },
-    ].filter(Boolean) as { label: string; value: string; icon: string }[];
+                            <div className="flex items-center gap-2 px-4 py-2 opacity-60">
+                                <div className="h-px bg-gray-200 flex-1"></div>
+                                <span className="text-[10px] uppercase font-bold text-gray-400">Activity Log</span>
+                                <div className="h-px bg-gray-200 flex-1"></div>
+                            </div>
 
-    return (
-        <Card className="border-[var(--nimmit-border)] shadow-soft-sm animate-fade-up stagger-4">
-            <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-display">Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                {details.map((detail) => (
-                    <div key={detail.label} className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-[var(--nimmit-bg-secondary)] flex items-center justify-center flex-shrink-0">
-                            <svg className="w-4 h-4 text-[var(--nimmit-text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={detail.icon} />
-                            </svg>
+                            {typedJob.messages.length === 0 ? (
+                                <div className="text-center py-10 text-xs text-gray-400 italic">No messages yet. Start the conversation below.</div>
+                            ) : (
+                                typedJob.messages.map((msg, i) => (
+                                    <div key={i} className={`flex gap-3 group px-2 ${msg.senderRole === "client" ? "flex-row-reverse" : ""}`}>
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 shadow-sm
+                                            ${msg.senderRole === 'client' ? 'bg-[var(--nimmit-accent-primary)] text-white' : 'bg-white border border-gray-200 text-gray-600'}`}>
+                                            {msg.senderRole[0].toUpperCase()}
+                                        </div>
+                                        <div className={`max-w-[75%] flex flex-col ${msg.senderRole === 'client' ? 'items-end' : 'items-start'}`}>
+                                            <div className="flex items-baseline gap-2 mb-1 px-1">
+                                                <span className="text-[11px] font-medium text-gray-900">{msg.senderRole === 'client' ? 'You' : 'Assistant'}</span>
+                                                <span className="text-[10px] text-gray-400">{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                            </div>
+                                            <div className={`py-2 px-3 rounded-lg text-sm leading-relaxed whitespace-pre-wrap shadow-sm ${msg.senderRole === 'client'
+                                                ? 'bg-[var(--nimmit-accent-primary)] text-white rounded-tr-none'
+                                                : 'bg-white border border-gray-200 text-gray-800 rounded-tl-none'
+                                                }`}>
+                                                {msg.message}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                            <div ref={messagesEndRef} />
                         </div>
-                        <div>
-                            <p className="text-xs text-[var(--nimmit-text-tertiary)]">{detail.label}</p>
-                            <p className="font-medium text-[var(--nimmit-text-primary)] capitalize">{detail.value}</p>
+
+                        {/* Input Area */}
+                        {/* Floating Input Area - Google AI Studio Style */}
+                        <div className="w-full max-w-3xl mx-auto p-4 pb-6">
+                            <div className="relative flex items-end gap-2 bg-[#f0f4f9] border-none rounded-[28px] p-2 pl-4 transition-all shadow-sm hover:shadow-md">
+                                <Textarea
+                                    className="min-h-[44px] max-h-[140px] w-full border-0 focus-visible:ring-0 p-2 text-sm resize-none bg-transparent placeholder:text-gray-500"
+                                    placeholder="Type a message or updates..."
+                                    value={message}
+                                    onChange={e => setMessage(e.target.value)}
+                                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+                                />
+                                <div className="flex pb-1 pr-1">
+                                    <Button size="icon" className="h-8 w-8 rounded-full shrink-0 bg-[var(--nimmit-accent-primary)] hover:bg-[var(--nimmit-accent-primary)]/90 text-white shadow-none" onClick={sendMessage}>
+                                        <Send className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                            <div className="text-[10px] text-gray-400 mt-2 px-4 flex justify-between">
+                                <span>Enter to send, Shift + Enter for new line</span>
+                                <span>Markdown supported</span>
+                            </div>
                         </div>
                     </div>
-                ))}
-            </CardContent>
-        </Card>
-    );
-}
-
-// Assistant Card
-function AssistantCard({ worker }: { worker: NonNullable<JobWithPopulated["workerId"]> }) {
-    return (
-        <Card className="border-[var(--nimmit-border)] shadow-soft-sm animate-fade-up stagger-5">
-            <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-display">Your Assistant</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[var(--nimmit-accent-primary)]/10 flex items-center justify-center">
-                        <span className="font-medium text-[var(--nimmit-accent-primary)]">
-                            {worker.profile.firstName[0]}{worker.profile.lastName[0]}
-                        </span>
-                    </div>
-                    <p className="font-medium text-[var(--nimmit-text-primary)]">{worker.profile.firstName} {worker.profile.lastName}</p>
                 </div>
-            </CardContent>
-        </Card>
+
+                {/* 2. Fixed Context Sidebar (Right) */}
+                <div className="w-[350px] bg-white border-l border-[var(--nimmit-border)] flex flex-col shrink-0 overflow-y-auto z-10">
+
+                    {/* Metadata Section */}
+                    <div className="p-4 border-b border-[var(--nimmit-border)]">
+                        <h2 className="text-xs font-semibold text-gray-900 uppercase tracking-wider mb-4">Job Details</h2>
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-[10px] text-gray-500 uppercase font-medium mb-1">Status</p>
+                                    <StatusBadge status={typedJob.status} />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] text-gray-500 uppercase font-medium mb-1">Priority</p>
+                                    <Badge variant="outline" className={`h-5 text-[10px] ${typedJob.priority !== 'standard' ? 'border-red-200 bg-red-50 text-red-700' : 'text-gray-600'}`}>
+                                        {typedJob.priority}
+                                    </Badge>
+                                </div>
+                            </div>
+
+                            <div>
+                                <p className="text-[10px] text-gray-500 uppercase font-medium mb-1">Assistant</p>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-100 to-blue-100 border border-purple-200 flex items-center justify-center text-[10px] font-bold text-purple-700">
+                                        {typedJob.workerId?.profile?.firstName?.[0] || "?"}
+                                    </div>
+                                    <span className="text-sm font-medium text-gray-900">
+                                        {typedJob.workerId?.profile ? `${typedJob.workerId.profile.firstName} ${typedJob.workerId.profile.lastName}` : "Pending Assignment"}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <p className="text-[10px] text-gray-500 uppercase font-medium mb-1">Timeline</p>
+                                <div className="flex items-center gap-2 text-xs text-gray-600">
+                                    <Clock className="w-3.5 h-3.5 text-gray-400" />
+                                    <span>Created {new Date(typedJob.createdAt).toLocaleDateString()}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Files Section */}
+                    <div className="flex-1 p-4">
+                        <div className="flex items-center justify-between mb-3">
+                            <h2 className="text-xs font-semibold text-gray-900 uppercase tracking-wider">Deliverables</h2>
+                            <span className="bg-gray-100 text-gray-500 text-[10px] px-1.5 py-0.5 rounded-full font-medium">{typedJob.files.length}</span>
+                        </div>
+
+                        <div className="space-y-2">
+                            {typedJob.files.map((f, i) => (
+                                <div key={i} className="group flex items-start gap-3 p-3 rounded-lg border border-gray-100 bg-gray-50/50 hover:bg-white hover:border-gray-200 hover:shadow-sm transition-all cursor-pointer">
+                                    <div className="bg-white p-1.5 rounded border border-gray-200 shrink-0 text-gray-500 group-hover:text-blue-600">
+                                        <Paperclip className="w-4 h-4" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-medium text-gray-700 truncate group-hover:text-gray-900">{f.name}</p>
+                                        <p className="text-[10px] text-gray-400 mt-0.5">{(f.size / 1024).toFixed(0)} KB</p>
+                                    </div>
+                                </div>
+                            ))}
+                            {typedJob.files.length === 0 && (
+                                <div className="p-6 border border-dashed border-gray-200 rounded-lg text-center bg-gray-50/30">
+                                    <p className="text-xs text-gray-400">No files uploaded yet.</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Support Block */}
+                        <div className="mt-8 p-3 bg-blue-50/50 rounded-lg border border-blue-100">
+                            <p className="text-[10px] text-blue-600 leading-relaxed text-center">
+                                Need help? <span className="underline cursor-pointer font-medium hover:text-blue-700">Flag for admin</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
     );
 }
 
-// Actions Card
-function ActionsCard({ onCancel }: { onCancel: () => void }) {
-    return (
-        <Card className="border-[var(--nimmit-border)] shadow-soft-sm animate-fade-up stagger-6">
-            <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-display">Actions</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <Button variant="outline" className="w-full border-[var(--nimmit-error)]/30 text-[var(--nimmit-error)] hover:bg-[var(--nimmit-error-bg)]" onClick={onCancel}>
-                    Cancel Task
-                </Button>
-            </CardContent>
-        </Card>
-    );
-}
-
-// Priority Badge
-function PriorityBadge({ priority }: { priority: string }) {
-    const config: Record<string, { className: string; label: string }> = {
-        rush: { className: "bg-[var(--nimmit-error)]/10 text-[var(--nimmit-error)] border-[var(--nimmit-error)]/20", label: "Rush" },
-        express: { className: "bg-[var(--nimmit-warning-bg)] text-[var(--nimmit-warning)] border-[var(--nimmit-warning)]/20", label: "Express" },
-    };
-    const { className, label } = config[priority] || { className: "", label: priority };
-    return <Badge variant="outline" className={`px-2.5 py-0.5 text-xs font-medium border rounded-full ${className}`}>{label}</Badge>;
-}
-
-// Status Badge
 function StatusBadge({ status }: { status: string }) {
-    const config: Record<string, { className: string; label: string }> = {
-        pending: { className: "bg-[var(--nimmit-warning-bg)] text-[var(--nimmit-warning)] border-[var(--nimmit-warning)]/20", label: "Pending" },
-        assigned: { className: "bg-[var(--nimmit-info-bg)] text-[var(--nimmit-info)] border-[var(--nimmit-info)]/20", label: "Assigned" },
-        in_progress: { className: "bg-[var(--nimmit-accent-primary)]/10 text-[var(--nimmit-accent-primary)] border-[var(--nimmit-accent-primary)]/20", label: "In Progress" },
-        review: { className: "bg-[var(--nimmit-info-bg)] text-[var(--nimmit-info)] border-[var(--nimmit-info)]/20", label: "Ready for Review" },
-        revision: { className: "bg-[var(--nimmit-warning-bg)] text-[var(--nimmit-warning)] border-[var(--nimmit-warning)]/20", label: "Revision" },
-        completed: { className: "bg-[var(--nimmit-success-bg)] text-[var(--nimmit-success)] border-[var(--nimmit-success)]/20", label: "Completed" },
-        cancelled: { className: "bg-[var(--nimmit-error-bg)] text-[var(--nimmit-error)] border-[var(--nimmit-error)]/20", label: "Cancelled" },
+    const styles: Record<string, string> = {
+        pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
+        assigned: "bg-blue-100 text-blue-800 border-blue-200",
+        in_progress: "bg-purple-100 text-purple-800 border-purple-200",
+        review: "bg-indigo-100 text-indigo-800 border-indigo-200",
+        completed: "bg-green-100 text-green-800 border-green-200",
+        cancelled: "bg-gray-100 text-gray-800 border-gray-200",
+        revision: "bg-orange-100 text-orange-800 border-orange-200",
     };
-    const { className, label } = config[status] || config.pending;
-    return <Badge variant="outline" className={`px-2.5 py-0.5 text-xs font-medium border rounded-full ${className}`}>{label}</Badge>;
+    return (
+        <Badge variant="outline" className={`border ${styles[status] || styles.pending} uppercase text-[10px] h-5 px-1.5`}>
+            {status.replace('_', ' ')}
+        </Badge>
+    );
 }

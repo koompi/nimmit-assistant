@@ -426,8 +426,8 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       });
     }
 
-    // Client: Update job details (only if pending)
-    if (isClient && job.status === "pending") {
+    // Client: Update job details (only if pending) OR Admin: Update job details (always)
+    if ((isClient && job.status === "pending") || isAdmin) {
       const parsed = updateJobSchema.safeParse(body);
       if (!parsed.success) {
         return NextResponse.json(

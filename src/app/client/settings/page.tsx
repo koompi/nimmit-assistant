@@ -9,12 +9,21 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 
+interface NotificationPreferences {
+  emailEnabled: boolean;
+  emailJobAssigned: boolean;
+  emailJobStarted: boolean;
+  emailJobSubmitted: boolean;
+  emailJobCompleted: boolean;
+  emailJobRevision: boolean;
+  emailNewMessage: boolean;
+  emailPaymentReceived: boolean;
+  emailWeeklyDigest: boolean;
+  inAppEnabled: boolean;
+}
+
 interface UserSettings {
-  notifications: {
-    jobUpdates: boolean;
-    statusChanges: boolean;
-    messages: boolean;
-  };
+  notifications: NotificationPreferences;
   communication: {
     preferredMethod: "email" | "phone" | "both";
     urgentNotifications: boolean;
@@ -23,9 +32,16 @@ interface UserSettings {
 
 const defaultSettings: UserSettings = {
   notifications: {
-    jobUpdates: true,
-    statusChanges: true,
-    messages: true,
+    emailEnabled: true,
+    emailJobAssigned: true,
+    emailJobStarted: true,
+    emailJobSubmitted: true,
+    emailJobCompleted: true,
+    emailJobRevision: true,
+    emailNewMessage: true,
+    emailPaymentReceived: true,
+    emailWeeklyDigest: false,
+    inAppEnabled: true,
   },
   communication: {
     preferredMethod: "email",
@@ -148,7 +164,7 @@ export default function ClientSettingsPage() {
     }
   }
 
-  function updateNotification(key: keyof UserSettings["notifications"], value: boolean) {
+  function updateNotification(key: keyof NotificationPreferences, value: boolean) {
     setSettings(prev => ({
       ...prev,
       notifications: { ...prev.notifications, [key]: value },
@@ -180,7 +196,7 @@ export default function ClientSettingsPage() {
           </p>
         </div>
 
-        {/* Notification Preferences */}
+        {/* Email Notification Preferences */}
         <Card className="border-[var(--nimmit-border)] shadow-sm animate-fade-up stagger-1">
           <CardHeader className="pb-4">
             <div className="flex items-center gap-3">
@@ -190,32 +206,85 @@ export default function ClientSettingsPage() {
                 </svg>
               </div>
               <div>
-                <CardTitle className="text-lg font-display">Notification Preferences</CardTitle>
-                <CardDescription>Choose what email notifications you receive</CardDescription>
+                <CardTitle className="text-lg font-display">Email Notifications</CardTitle>
+                <CardDescription>Choose which email notifications you receive</CardDescription>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4">
+            {/* Master Toggle */}
             <NotificationToggle
-              id="jobUpdates"
-              label="Job Updates"
-              description="Get notified when there are updates on your submitted jobs"
-              checked={settings.notifications.jobUpdates}
-              onCheckedChange={(checked) => updateNotification("jobUpdates", checked)}
+              id="emailEnabled"
+              label="Email Notifications"
+              description="Enable or disable all email notifications"
+              checked={settings.notifications.emailEnabled}
+              onCheckedChange={(checked) => updateNotification("emailEnabled", checked)}
             />
+
+            {settings.notifications.emailEnabled && (
+              <div className="space-y-4 pl-4 border-l-2 border-[var(--nimmit-border)]">
+                <NotificationToggle
+                  id="emailJobStarted"
+                  label="Work Started"
+                  description="When your assistant begins working on a job"
+                  checked={settings.notifications.emailJobStarted}
+                  onCheckedChange={(checked) => updateNotification("emailJobStarted", checked)}
+                />
+                <NotificationToggle
+                  id="emailJobSubmitted"
+                  label="Job Submitted"
+                  description="When a job is submitted for your review"
+                  checked={settings.notifications.emailJobSubmitted}
+                  onCheckedChange={(checked) => updateNotification("emailJobSubmitted", checked)}
+                />
+                <NotificationToggle
+                  id="emailJobCompleted"
+                  label="Job Completed"
+                  description="When a job has been approved and completed"
+                  checked={settings.notifications.emailJobCompleted}
+                  onCheckedChange={(checked) => updateNotification("emailJobCompleted", checked)}
+                />
+                <NotificationToggle
+                  id="emailNewMessage"
+                  label="New Messages"
+                  description="When your assistant sends you a message"
+                  checked={settings.notifications.emailNewMessage}
+                  onCheckedChange={(checked) => updateNotification("emailNewMessage", checked)}
+                />
+                <NotificationToggle
+                  id="emailWeeklyDigest"
+                  label="Weekly Digest"
+                  description="Weekly summary of your job activity and usage"
+                  checked={settings.notifications.emailWeeklyDigest}
+                  onCheckedChange={(checked) => updateNotification("emailWeeklyDigest", checked)}
+                />
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* In-App Notifications */}
+        <Card className="border-[var(--nimmit-border)] shadow-sm animate-fade-up stagger-1b">
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[var(--nimmit-accent-tertiary)]/10 flex items-center justify-center">
+                <svg className="w-5 h-5 text-[var(--nimmit-accent-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div>
+                <CardTitle className="text-lg font-display">In-App Notifications</CardTitle>
+                <CardDescription>Real-time notifications in the dashboard</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
             <NotificationToggle
-              id="statusChanges"
-              label="Status Changes"
-              description="Get notified when a job status changes (assigned, in progress, review)"
-              checked={settings.notifications.statusChanges}
-              onCheckedChange={(checked) => updateNotification("statusChanges", checked)}
-            />
-            <NotificationToggle
-              id="messages"
-              label="Messages"
-              description="Get notified when your assistant sends you a message"
-              checked={settings.notifications.messages}
-              onCheckedChange={(checked) => updateNotification("messages", checked)}
+              id="inAppEnabled"
+              label="In-App Notifications"
+              description="Show real-time notifications in the notification bell"
+              checked={settings.notifications.inAppEnabled}
+              onCheckedChange={(checked) => updateNotification("inAppEnabled", checked)}
             />
           </CardContent>
         </Card>

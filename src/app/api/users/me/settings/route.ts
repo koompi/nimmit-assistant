@@ -4,14 +4,26 @@ import { connectDB } from "@/lib/db/connection";
 import { User } from "@/lib/db/models";
 import { z } from "zod";
 
-// Settings schema - stored as part of user or separate collection in future
+// Settings schema - matches UserSettings in User model
+const notificationPreferencesSchema = z.object({
+  emailEnabled: z.boolean().optional(),
+  emailJobAssigned: z.boolean().optional(),
+  emailJobStarted: z.boolean().optional(),
+  emailJobSubmitted: z.boolean().optional(),
+  emailJobCompleted: z.boolean().optional(),
+  emailJobRevision: z.boolean().optional(),
+  emailNewMessage: z.boolean().optional(),
+  emailPaymentReceived: z.boolean().optional(),
+  emailWeeklyDigest: z.boolean().optional(),
+  inAppEnabled: z.boolean().optional(),
+});
+
 const settingsSchema = z.object({
-  notifications: z
+  notifications: notificationPreferencesSchema.optional(),
+  communication: z
     .object({
-      email: z.boolean().optional(),
-      jobUpdates: z.boolean().optional(),
-      marketing: z.boolean().optional(),
-      weeklyDigest: z.boolean().optional(),
+      preferredMethod: z.enum(["email", "phone", "both"]).optional(),
+      urgentNotifications: z.boolean().optional(),
     })
     .optional(),
   preferences: z
@@ -26,10 +38,20 @@ const settingsSchema = z.object({
 // Default settings for new users
 const defaultSettings = {
   notifications: {
-    email: true,
-    jobUpdates: true,
-    marketing: false,
-    weeklyDigest: true,
+    emailEnabled: true,
+    emailJobAssigned: true,
+    emailJobStarted: true,
+    emailJobSubmitted: true,
+    emailJobCompleted: true,
+    emailJobRevision: true,
+    emailNewMessage: true,
+    emailPaymentReceived: true,
+    emailWeeklyDigest: false,
+    inAppEnabled: true,
+  },
+  communication: {
+    preferredMethod: "email" as const,
+    urgentNotifications: true,
   },
   preferences: {
     language: "en",
@@ -77,6 +99,10 @@ export async function GET() {
         notifications: {
           ...defaultSettings.notifications,
           ...(userSettings.notifications || {}),
+        },
+        communication: {
+          ...defaultSettings.communication,
+          ...(userSettings.communication || {}),
         },
         preferences: {
           ...defaultSettings.preferences,
@@ -141,12 +167,13 @@ export async function PATCH(request: Request) {
       );
     }
 
-    const { notifications, preferences } = parsed.data;
+    const { notifications, preferences, communication } = parsed.data;
 
     // Get existing settings or use defaults
     const existingSettings = (user as unknown as Record<string, unknown>).settings || defaultSettings;
     const existingNotifications = (existingSettings as Record<string, unknown>).notifications || {};
     const existingPreferences = (existingSettings as Record<string, unknown>).preferences || {};
+    const existingCommunication = (existingSettings as Record<string, unknown>).communication || {};
 
     // Merge settings
     const updatedSettings = {
@@ -154,6 +181,11 @@ export async function PATCH(request: Request) {
         ...defaultSettings.notifications,
         ...existingNotifications,
         ...notifications,
+      },
+      communication: {
+        ...defaultSettings.communication,
+        ...existingCommunication,
+        ...communication,
       },
       preferences: {
         ...defaultSettings.preferences,

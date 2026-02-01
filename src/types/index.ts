@@ -16,6 +16,8 @@ export interface WorkerStats {
   totalEarnings: number;
 }
 
+export type StripeConnectStatus = "pending" | "active" | "restricted" | "disabled";
+
 export interface WorkerProfile {
   skills: string[];
   skillLevels: Record<string, SkillLevel>;
@@ -24,6 +26,10 @@ export interface WorkerProfile {
   maxConcurrentJobs: number;
   stats: WorkerStats;
   bio?: string;
+  // Stripe Connect for payouts
+  stripeConnectAccountId?: string;
+  stripeConnectStatus?: StripeConnectStatus;
+  pendingEarnings?: number;
 }
 
 export type SubscriptionTier = "starter" | "growth" | "scale";
@@ -41,12 +47,24 @@ export interface ClientBilling {
   billingPeriodEnd?: Date;
 }
 
+export type CompanySize = "solo" | "2-10" | "11-50" | "51-200" | "200+";
+
+export interface OnboardingData {
+  companySize?: CompanySize;
+  industry?: string;
+  primaryTaskTypes?: string[];
+  howDidYouHear?: string;
+  completedAt?: Date;
+}
+
 export interface ClientProfile {
   company?: string;
   preferredWorkerId?: Types.ObjectId;
   totalJobs: number;
   totalSpent: number;
   billing?: ClientBilling;
+  onboardingCompleted?: boolean;
+  onboarding?: OnboardingData;
 }
 
 export interface UserProfile {

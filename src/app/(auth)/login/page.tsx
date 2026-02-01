@@ -67,7 +67,7 @@ function LoginForm() {
       subtitle: "Sign in to continue to Nimmit",
     },
     worker: {
-      title: "Worker Portal",
+      title: "VA Portal",
       subtitle: "Sign in to access your assignments",
     },
   };
@@ -92,12 +92,12 @@ function LoginForm() {
               value="worker"
               className="flex-1 h-8 text-[13px] font-medium rounded-md data-[state=active]:bg-white data-[state=active]:text-[#1F1F1F] data-[state=active]:shadow-sm text-[#6B6B6B] transition-all duration-200"
             >
-              Worker
+              VA
             </TabsTrigger>
           </TabsList>
         </div>
 
-        <TabsContent value="client" className="mt-0">
+        <TabsContent value="client" className="mt-0 data-[state=inactive]:hidden data-[state=active]:animate-in data-[state=active]:fade-in-0 data-[state=active]:slide-in-from-left-2 duration-200">
           <CardHeader className="space-y-4 text-center pb-2 pt-6">
             {/* Logo/Brand - Minimalist Scale */}
             <div className="mx-auto mb-2">
@@ -116,7 +116,7 @@ function LoginForm() {
           </CardHeader>
         </TabsContent>
 
-        <TabsContent value="worker" className="mt-0">
+        <TabsContent value="worker" className="mt-0 data-[state=inactive]:hidden data-[state=active]:animate-in data-[state=active]:fade-in-0 data-[state=active]:slide-in-from-right-2 duration-200">
           <CardHeader className="space-y-4 text-center pb-2 pt-6">
             {/* Logo/Brand - Minimalist Scale */}
             <div className="mx-auto mb-2">
@@ -257,7 +257,7 @@ function LoginForm() {
               href="/careers"
               className="text-[13px] text-[#6B6B6B] hover:text-[#D45A45] transition-colors animate-fade-in"
             >
-              Not a worker yet? <span className="font-medium text-[#D45A45]">Apply to join our team</span> &rarr;
+              Not a VA yet? <span className="font-medium text-[#D45A45]">Apply to join our team</span> &rarr;
             </Link>
           )}
         </CardFooter>

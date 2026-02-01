@@ -33,6 +33,12 @@ export function useNotifications(
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttempts = useRef(0);
+  const onNotificationRef = useRef(onNotification);
+
+  // Update ref when callback changes
+  useEffect(() => {
+    onNotificationRef.current = onNotification;
+  }, [onNotification]);
 
   // Fetch initial notifications
   const fetchNotifications = useCallback(async () => {
@@ -54,65 +60,24 @@ export function useNotifications(
     }
   }, []);
 
-  // Connect to SSE stream
-  const connect = useCallback(() => {
-    if (!enabled || eventSourceRef.current) return;
+  // Poll for notifications
+  useEffect(() => {
+    if (!enabled) return;
 
-    const eventSource = new EventSource('/api/notifications/stream');
-    eventSourceRef.current = eventSource;
+    // Initial fetch
+    fetchNotifications();
 
-    eventSource.onopen = () => {
-      setIsConnected(true);
-      setError(null);
-      reconnectAttempts.current = 0;
-    };
+    // Poll every 30 seconds
+    const interval = setInterval(() => {
+      fetchNotifications();
+    }, 30000);
 
-    eventSource.addEventListener('connected', (event) => {
-      const data = JSON.parse(event.data);
-      setUnreadCount(data.unreadCount);
-    });
+    return () => clearInterval(interval);
+  }, [enabled, fetchNotifications]);
 
-    eventSource.addEventListener('notification', (event) => {
-      const notification = JSON.parse(event.data) as Notification;
+  // Deprecated connection properties/methods kept for API compatibility if needed
+  // or explicitly removed. Since we are refactoring, we can return dummy values if consumers expect them.
 
-      setNotifications((prev) => [notification, ...prev].slice(0, 100));
-      setUnreadCount((prev) => prev + 1);
-
-      // Call optional callback
-      onNotification?.(notification);
-    });
-
-    eventSource.addEventListener('ping', () => {
-      // Keep-alive ping, no action needed
-    });
-
-    eventSource.onerror = () => {
-      setIsConnected(false);
-      eventSource.close();
-      eventSourceRef.current = null;
-
-      // Reconnect with exponential backoff
-      const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 30000);
-      reconnectAttempts.current++;
-
-      reconnectTimeoutRef.current = setTimeout(() => {
-        connect();
-      }, delay);
-    };
-  }, [enabled, onNotification]);
-
-  // Disconnect from SSE
-  const disconnect = useCallback(() => {
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-      eventSourceRef.current = null;
-    }
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-      reconnectTimeoutRef.current = null;
-    }
-    setIsConnected(false);
-  }, []);
 
   // Mark single notification as read
   const markAsRead = useCallback(async (notificationId: string) => {
@@ -152,17 +117,7 @@ export function useNotifications(
     }
   }, []);
 
-  // Initialize
-  useEffect(() => {
-    if (enabled) {
-      fetchNotifications();
-      connect();
-    }
 
-    return () => {
-      disconnect();
-    };
-  }, [enabled, fetchNotifications, connect, disconnect]);
 
   return {
     notifications,

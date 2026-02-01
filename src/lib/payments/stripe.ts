@@ -218,4 +218,188 @@ export async function constructWebhookEvent(
   return stripe.webhooks.constructEvent(payload, signature, webhookSecret);
 }
 
+// ===========================================
+// Stripe Connect - Worker Payouts
+// ===========================================
+
+export interface ConnectAccountStatus {
+  accountId: string;
+  chargesEnabled: boolean;
+  payoutsEnabled: boolean;
+  detailsSubmitted: boolean;
+  requirements?: {
+    currentlyDue: string[];
+    eventuallyDue: string[];
+    pastDue: string[];
+  };
+}
+
+/**
+ * Create a Stripe Connect Express account for a worker
+ */
+export async function createConnectAccount(
+  email: string,
+  metadata?: Record<string, string>
+): Promise<string> {
+  const stripe = getStripe();
+
+  const account = await stripe.accounts.create({
+    type: 'express',
+    email,
+    capabilities: {
+      transfers: { requested: true },
+    },
+    metadata,
+  });
+
+  return account.id;
+}
+
+/**
+ * Create an onboarding link for a worker to complete their Connect account setup
+ */
+export async function createConnectOnboardingLink(
+  accountId: string,
+  refreshUrl: string,
+  returnUrl: string
+): Promise<string> {
+  const stripe = getStripe();
+
+  const accountLink = await stripe.accountLinks.create({
+    account: accountId,
+    refresh_url: refreshUrl,
+    return_url: returnUrl,
+    type: 'account_onboarding',
+  });
+
+  return accountLink.url;
+}
+
+/**
+ * Create a login link for a worker to access their Stripe Express dashboard
+ */
+export async function createConnectLoginLink(accountId: string): Promise<string> {
+  const stripe = getStripe();
+
+  const loginLink = await stripe.accounts.createLoginLink(accountId);
+  return loginLink.url;
+}
+
+/**
+ * Get the status of a Connect account
+ */
+export async function getConnectAccountStatus(
+  accountId: string
+): Promise<ConnectAccountStatus | null> {
+  const stripe = getStripe();
+
+  try {
+    const account = await stripe.accounts.retrieve(accountId);
+
+    return {
+      accountId: account.id,
+      chargesEnabled: account.charges_enabled,
+      payoutsEnabled: account.payouts_enabled,
+      detailsSubmitted: account.details_submitted,
+      requirements: account.requirements ? {
+        currentlyDue: account.requirements.currently_due || [],
+        eventuallyDue: account.requirements.eventually_due || [],
+        pastDue: account.requirements.past_due || [],
+      } : undefined,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Transfer funds to a worker's Connect account
+ */
+export async function createTransfer(
+  amount: number, // Amount in cents
+  destinationAccountId: string,
+  metadata?: Record<string, string>
+): Promise<{ transferId: string; amount: number }> {
+  const stripe = getStripe();
+
+  const transfer = await stripe.transfers.create({
+    amount,
+    currency: 'usd',
+    destination: destinationAccountId,
+    metadata,
+  });
+
+  return {
+    transferId: transfer.id,
+    amount: transfer.amount,
+  };
+}
+
+/**
+ * Create a payout from Nimmit's platform account to a worker
+ * This is the main function used for paying workers
+ */
+export async function payWorker(
+  workerConnectAccountId: string,
+  amountCents: number,
+  jobId: string,
+  jobTitle: string
+): Promise<{ transferId: string; amount: number }> {
+  return createTransfer(amountCents, workerConnectAccountId, {
+    jobId,
+    jobTitle,
+    type: 'worker_payout',
+  });
+}
+
+/**
+ * Get transfer history for a worker
+ */
+export async function getWorkerTransfers(
+  destinationAccountId: string,
+  limit = 10
+): Promise<Stripe.Transfer[]> {
+  const stripe = getStripe();
+
+  const transfers = await stripe.transfers.list({
+    destination: destinationAccountId,
+    limit,
+  });
+
+  return transfers.data;
+}
+
+/**
+ * Get the platform's available balance
+ */
+export async function getPlatformBalance(): Promise<{
+  available: number;
+  pending: number;
+}> {
+  const stripe = getStripe();
+
+  const balance = await stripe.balance.retrieve();
+
+  const availableUsd = balance.available.find(b => b.currency === 'usd');
+  const pendingUsd = balance.pending.find(b => b.currency === 'usd');
+
+  return {
+    available: availableUsd?.amount || 0,
+    pending: pendingUsd?.amount || 0,
+  };
+}
+
+/**
+ * Retrieve a transfer by ID
+ */
+export async function getTransfer(transferId: string): Promise<Stripe.Transfer | null> {
+  const stripe = getStripe();
+
+  try {
+    return await stripe.transfers.retrieve(transferId);
+  } catch {
+    return null;
+  }
+}
+
 export { getStripe };

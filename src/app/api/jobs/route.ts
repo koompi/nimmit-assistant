@@ -5,6 +5,7 @@ import { Job, User } from "@/lib/db/models";
 import { createJobSchema } from "@/lib/validations/job";
 import { addJobAnalysisJob } from "@/lib/queue";
 import { calculateJobCost, checkCredits } from "@/lib/payments/credits";
+import { auditJob, auditPayment } from "@/lib/audit";
 
 // GET /api/jobs - List jobs based on user role
 export async function GET(request: Request) {
@@ -211,6 +212,23 @@ export async function POST(request: Request) {
     const createdJob = await Job.findById(job._id)
       .populate("clientId", "profile.firstName profile.lastName email")
       .lean();
+
+    // Audit log: job created
+    auditJob(
+      'job.created',
+      { id: session.user.id, email: session.user.email, role: 'client' },
+      job._id.toString(),
+      `Job "${parsed.data.title}" created (${creditCost.total} credits charged)`,
+      { category: parsed.data.category, priority: parsed.data.priority, creditsCharged: creditCost.total }
+    );
+
+    // Audit log: credits deducted
+    auditPayment(
+      'payment.credits_deducted',
+      { id: session.user.id, email: session.user.email, role: 'client' },
+      `${creditCost.total} credits deducted for job "${parsed.data.title}"`,
+      { jobId: job._id.toString(), amount: creditCost.total, breakdown: creditCost.breakdown }
+    );
 
     return NextResponse.json(
       {
