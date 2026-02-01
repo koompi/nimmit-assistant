@@ -60,25 +60,3 @@ This document serves as the central "Source of Truth" for the Nimmit platform ev
 
 ## 4. Action Log
 
-| Date | Action | Description | Pointer |
-| :--- | :--- | :--- | :--- |
-| 2026-01-31 | **System Closure** | Hardened repository and synchronized all refinements for transfer to subsequent agent. Series locked at Minimalist v5. | `bikepaths` branch |
-| 2026-01-31 | **Foil Audit** | Completed "Engineer's Stance" audit (v5). Removed contractions, em-dashes, and negative framing. | `article_series/` |
-| 2026-01-31 | **Article 6 PD** | [x] Track 14: Blog Production (Article 6) <!-- id: 71 --> <br> &nbsp;&nbsp;&nbsp;&nbsp;- [x] Draft Article 6 PD: "Your Global Team" <!-- id: 72 --> <br> &nbsp;&nbsp;&nbsp;&nbsp;- [x] Perform style audit (Minimalist v4) <!-- id: 73 --> <br> &nbsp;&nbsp;&nbsp;&nbsp;- [x] Sync FD to repository <!-- id: 74 --> | `article_series/` |
-| 2026-01-31 | **Article 5 PD** | Drafted "Why Cheap is Expensive" (Reliability intro). | `article_series/` |
-| 2026-01-31 | **Article 4 PD** | Drafted "Piloting Your Pod" (Human-AI synergy). | `article_series/` |
-| 2026-01-31 | **Glossary Norm** | Standardized glossary style (Bold Title Case + Colon) across all articles. | `article_series/` |
-| 2026-01-31 | **WP Hardening** | Added Academic Anchors (Coase, Licklider, Wegner) and ESL Simplification. | v2_Finalized |
-| 2026-01-31 | **Glossary Init** | Created living glossary with simplified terminology. | `source/glossary.md` |
-| 2026-01-31 | **Blog Series** | Approved 6-part "Future of Solo Work" outline. | `article_series/notes/` |
-| 2026-01-31 | **CMS Rescue** | Corrected `config.ini` GTM misconfiguration on remote server. | `Remote CMS Fix` |
-| 2026-01-31| **Protocol Set** | Hardcoded date slugging and symlink recognition rules. | `htmly/system/` |
-| 2026-01-31 | **Foundation Notes** | Standardized `reandom-noetes.md` into `2026-01-31_nimmit_research_notes.md`. | `source/research/` |
-| 2026-01-31 | **Ledger Update** | Formalized Publication Strategy and Dynamic Draft status. | `NIMMIT_PROJECT_LEDGER.md` |
-| 2026-01-31 | **Article 2 PD** | Drafted "The Management Tax" (Transaction Costs intro). | `article_series/` |
-| 2026-01-31 | **Article 3 PD** | Drafted "The Context Cloud" (System memory intro). | `article_series/` |
-| 2026-01-31 | **Style Norm** | Performed "Zero Quote / Minimalist" normalization across all docs. | `article_series/` |
-| 2026-01-31 | **Style Codified** | Established "Italicized Minimalist" formatting protocol (Italics/Pedagogy). | `NIMMIT_PROJECT_LEDGER.md` |
-| 2026-01-31 | **Article 1 Final** | Finalized Title and Tone adjustments based on user feedback. | `article_series/` |
-| 2026-01-31 | **Article 1 PD** | Drafted "The New Way to Work" (Micro-Entity introduction). | `article_series/` |
-| 2026-01-31 | **Ledger Genesis** | Initialized this Project Ledger for permanent tracking. | `NIMMIT_PROJECT_LEDGER.md` |
