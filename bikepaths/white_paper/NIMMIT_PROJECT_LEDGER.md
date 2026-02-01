@@ -59,6 +59,7 @@ This document serves as the central "Source of Truth" for the Nimmit platform ev
 
 | Date | Action | Description | Pointer |
 | :--- | :--- | :--- | :--- |
+| 2026-01-31 | **Article 5 PD** | Drafted "Why Cheap is Expensive" (Reliability intro). | `article_series/` |
 | 2026-01-31 | **Article 4 PD** | Drafted "Piloting Your Pod" (Human-AI synergy). | `article_series/` |
 | 2026-01-31 | **Glossary Norm** | Standardized glossary style (Bold Title Case + Colon) across all articles. | `article_series/` |
 | 2026-01-31 | **WP Hardening** | Added Academic Anchors (Coase, Licklider, Wegner) and ESL Simplification. | v2_Finalized |
