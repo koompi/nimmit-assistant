@@ -14,10 +14,12 @@ This document serves as the central "Source of Truth" for the Nimmit platform ev
 > **Dynamic Development**: All project documents (White Paper, Blog Series, and Notes) are **Dynamic Drafts**. As we gather new notes and synthesize big ideas, they are continuously incorporated into all core documents. Everything is evolving in real-time.
 
 > [!NOTE]
-> **Style Protocol (Italicized Minimalist)**:
-> - **Header Level**: Use `###` for primary article titles to maintain a pedagogical, non-aggressive hierarchy.
-> - **Emphasis**: Use *italics* for conceptual terms (e.g., *friction trap*, *transaction costs*) to encourage absorption over scanning.
-> - **Tone**: "Academic-Lite" Pedagogy. Neutralize marketing-speak. Prefer lowercase terms of art to avoid forced branding.
+> **Style Protocol (Italicized Minimalist v2)**:
+> - **Header Level**: Canonical `###` for all article titles. No H1/H2.
+> - **Emphasis**: Use *italics* for conceptual terms.
+> - **Case Sensitivity**: Prefer lowercase for concepts (*friction trap*, *transaction costs*, *context cloud*) unless proper nouns or sentence starts.
+> - **Minimalist Punctuation**: Remove unnecessary quotes around terms like "AI" or "outsourcing."
+> - **Language**: Favor skill-based verbs (*precision*, *orchestration*) over machine-based verbs (*automation*, *perfect accuracy*).
 
 ---
 
