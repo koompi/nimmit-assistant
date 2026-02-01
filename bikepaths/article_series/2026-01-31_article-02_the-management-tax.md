@@ -1,6 +1,6 @@
 ### The Management Tax: Why Growing Your Team Slows You Down
 
-When a solo business starts to succeed, the founder usually makes a choice: *hire help*.
+When your solo business starts to succeed, you usually make a choice: *hire help*.
 
 It seems like a logical move. If you have more work than time, you hire someone to do the work, right? But for many, this is where the trouble begins. Instead of getting more work done, you find yourself sitting in meetings, answering questions, and fixing mistakes.
 
@@ -42,4 +42,4 @@ The future belongs to those who own their systems, not those who manage people.
 
 **Transaction Costs**: The time and effort spent to coordinate, communicate, and manage a task, separate from the actual work itself.
 
-**Friction**: The resistance or loss of momentum caused by inefficient communication, misaligned context, and the overhead of managing people instead of leadings systems.
+**Friction**: The resistance or loss of momentum caused by inefficient communication, misaligned context, and the overhead of managing people instead of leading systems.

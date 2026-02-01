@@ -1,26 +1,26 @@
-### The New Way to Work: What is a Micro-Entity?
+### The Micro-Entity Revolution: A New Way to Work
 
-Have you ever felt like you are working more, but growing less?
+Have you ever felt like you are working more, but achieving less?
 
-Imagine you are a talented graphic designer or a brilliant coder. You started your business because you love your craft. But now, your day is filled with things you don't love:
+Imagine you are a talented designer or a brilliant coder. You started your business because you love your craft. But now, your days are filled with things you don't enjoy:
 
-- Answering hundreds of emails.
-- Fixing small mistakes made by freelancers.
+- Answering many emails.
+- Fixing small mistakes made by others.
 - Explaining the same project rules over and over again.
 
 You are caught in a *friction trap*.
 
 ### The Problem With Growing Big
-Typically, when a business wants to grow, the answer is to *hire more people*. But for a solo founder, hiring creates a new problem. Instead of doing your work, you spend your entire day *managing people*. 
+Typically, when a business wants to grow, the answer is to *hire more people*. But for the individual founder, hiring creates a new problem. Instead of doing the creative work you enjoy, you end up spending your time *managing* and instructing others. 
 
-Economists call this *transaction costs*. We call it *the management tax*. If you spend 2 hours explaining a task that only takes 2 hours to finish, you haven't gained anything. You have only added friction to your life.
+Economists call this *transaction costs*, but we call it a *management tax*. If you spend 2 hours explaining a task that takes 1 hour to finish, you haven't gained anything. You've only added *friction* to your life.
 
-### Enter the Micro-Entity
-At Nimmit, we believe there is a better way. We call it becoming a *micro-entity*.
+### The Micro-Entity
+At Nimmit, we believe there is a better way to grow a business. We call this becoming a *micro-entity*.
 
 A micro-entity is a business of one person (or a very small team) that has the power of a large corporation. How? By using *systems* instead of *managerial teams*.
 
-Instead of trying to find and train perfect employees, the micro-entity uses an operating system for work. This system handles the memory, the boring tasks, and the small details for you.
+Instead of trying to find and train perfect employees, the micro-entity uses an intelligent system to do the mundane and repetitive tasks. An intelligent system remembers everything, while handling the boring tasks and the fine details of your business.
 
 ### Why This Matters for You
 When you stop being a manager and start being a *pilot*, everything changes:
