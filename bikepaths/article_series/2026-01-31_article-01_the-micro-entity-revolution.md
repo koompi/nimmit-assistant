@@ -24,9 +24,9 @@ Instead of trying to find and train perfect employees, the micro-entity uses an 
 
 ### Why This Matters for You
 When you stop being a manager and start being a *pilot*, everything changes:
-1.  **infinite capacity**: You can take on 5x more clients without working 5x more hours.
-2.  **no recruitment stress**: You don't have to worry about people leaving or repeating the same training.
-3.  **judgment over labor**: You focus only on the smart part of the job. The system handles the boring part.
+1.  **Infinite Capacity**: You can take on five times more clients without working five times more hours.
+2.  **No Recruitment Stress**: You do not have to worry about people leaving or repeating the same training.
+3.  **Judgment Over Labor**: You focus only on the smart part of the job. The system handles the boring part.
 
 ### What is Next?
 In our next article, we will go deeper into *the management tax* and explain why traditional hiring is slowing you down. We will also explain the scientific reasoning behind why our *context cloud* is the solution.

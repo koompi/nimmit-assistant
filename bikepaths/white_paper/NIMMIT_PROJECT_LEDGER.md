@@ -14,12 +14,13 @@ This document serves as the central "Source of Truth" for the Nimmit platform ev
 > **Dynamic Development**: All project documents (White Paper, Blog Series, and Notes) are **Dynamic Drafts**. As we gather new notes and synthesize big ideas, they are continuously incorporated into all core documents. Everything is evolving in real-time.
 
 > [!NOTE]
-> **Style Protocol (Italicized Minimalist v3)**:
-> - **Header Level**: Use Title Case for `###` article headers. No H1/H2.
-> - **Emphasis**: Use *italics* for conceptual terms.
-> - **Case Sensitivity**: Strictly lowercase for terms mid-sentence (*friction trap*, *transaction costs*, *context cloud*). Use caps only for proper nouns or sentence starts.
-> - **Zero Quotation**: Absolutely no quotation marks around terms or common phrases. Zero.
-> - **No Bolding**: No bold text in the body. Use structure and italics for prominence.
+> **Style Protocol (Minimalist v4)**:
+> - **Header Level**: Title Case for `###` headers.
+> - **Emphasis**: *Italics* for mid-sentence conceptual terms (ESL special meaning signal).
+> - **List Anchors**: **Bold and Title Case** for the lead term in any list (e.g., **1. Infinite Capacity**).
+> - **Semantic Rule**: Use skill-based verbs (*precision*, *orchestration*, *judgment*). Avoid machine language (*automation*, *bots*).
+> - **Zero Quotation**: No quotation marks. Ever.
+> - **Body Bolding**: None allowed in standard paragraphs.
 
 ---
 

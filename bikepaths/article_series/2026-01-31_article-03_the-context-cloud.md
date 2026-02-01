@@ -11,9 +11,9 @@ At Nimmit, we solve this by building a *context cloud*.
 ### What is a Context Cloud?
 
 A *context cloud* is a digital record of your business intelligence. It is more than just a folder of files. It is a structured memory that understands:
-*   How you talk to your customers.
-*   Your specific technical rules for coding or design.
-*   Your long-term goals and why you make certain choices.
+*   **Customer Communication**: How you talk to your customers.
+*   **Technical Precision**: Your specific technical rules for coding or design.
+*   **Strategic Judgment**: Your long-term goals and why you make certain choices.
 
 Instead of teaching a person, you teach the *context cloud*. 
 
