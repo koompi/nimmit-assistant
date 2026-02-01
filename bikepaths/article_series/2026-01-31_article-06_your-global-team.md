@@ -6,10 +6,9 @@ In the old way of working, companies looked for global workers to save money on 
 
 ### Beyond Low-Cost Labor
 
-In Cambodia, a new generation of high-skill talent is rising. These are not people who simply follow a list of steps. These are experts who use *artificial intelligence* and our *context cloud* to deliver *precision* at scale.
+In Cambodia, a new generation of high-skill talent is rising. They use *artificial intelligence* and *context cloud* to deliver *precision* at scale. When working with a *virtual pod*, you get:
 
-When you work with a *virtual pod* in our Cambodia hub:
-1.  **High-Level Skill**: Your team members are trained in the latest *ai-powered* tools. They don't just "do the work"; they lead the systems that do the work.
+1.  **High-Level Skill**: Your team members are trained in the latest *ai-powered* tools. They lead the systems that perform the technical execution.
 2.  **Cultural Intelligence**: Our team understands the needs of global founders. They use their *judgment* to ensure your brand style is always protected.
 3.  **Global Opportunity**: By working together, we are creating high-paying, smart jobs that allow talented people to grow their careers without leaving their home country.
 
@@ -19,7 +18,7 @@ We believe that when you combine a talented human with a powerful system, you cr
 
 A *value surplus* is the extra growth you achieve because you no longer have to spend your time on mundane tasks. Because your team in Cambodia is managing the *friction*, you are free to focus on your vision. 
 
-The goal of Nimmit is to connect the world's best solo founders with the world's best rising talent. We are not just building a product; we are building a new economy where everyone wins.
+We believe that when you combine a talented human with a powerful system, you create a *value surplus*. This creates a new economy where everyone wins.
 
 ### Start Your Journey
 

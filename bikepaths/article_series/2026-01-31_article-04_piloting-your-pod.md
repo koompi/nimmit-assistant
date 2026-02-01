@@ -1,8 +1,6 @@
 ### Piloting Your Pod: How Humans and AI Work Together
 
-Many people ask a very important question: Is artificial intelligence going to replace my team?
-
-At Nimmit, we believe the answer is no. Instead, *artificial intelligence* makes your team ten times faster and much more accurate. We solve problems by creating a *virtual pod*. This is a small team where humans and systems work together in a perfect loop.
+At Nimmit, *artificial intelligence* makes your team ten times faster and much more accurate. We solve problems by creating a *virtual pod*. This is a small team where humans and systems work together in a perfect loop.
 
 ### The 80/20 Rule of Work
 
@@ -22,7 +20,7 @@ This is how we use *ai-powered teams*. Your *virtual pod* uses our *context clou
 
 ### Leading the Future
 
-By using this model, you don't have to worry about the tools or the technology. You only have to worry about your vision. You provide the goals, and your pod provides the *precision*.
+By using this model, you can focus entirely on your vision. You provide the goals, and your pod provides the *precision*.
 
 In our next article, we will look at why choosing a system based on results is much better than paying for an hour of labor. We call this the secret of *reliability arbitrage*.
 

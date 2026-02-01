@@ -27,7 +27,7 @@ Because they lack this *context*, they will inevitably make a small mistake. You
 This cycle of checking and re-checking is the heaviest part of the *management tax*. It is the reason why many solo founders feel "stuck" at a certain level of success.
 
 ### Deleting the Tax
-The goal of Nimmit is not to give you more people to manage. Our goal is to delete the *transaction costs* of growth.
+Nimmit provides systems that reduce the burden of management. Our goal is to delete the *transaction costs* of growth.
 
 We build a digital memory that never forgets your rules by building a *context cloud*. By putting your intelligence into a system instead of a person, you can scale your business without increasing the *friction*.
 

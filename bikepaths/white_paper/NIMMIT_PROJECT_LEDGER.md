@@ -18,10 +18,13 @@ This document serves as the central "Source of Truth" for the Nimmit platform ev
 > - **Header Level**: Title Case for `###` headers.
 > - **Emphasis**: *Italics* for mid-sentence conceptual terms (ESL special meaning signal).
 > - **List Anchors**: **Bold and Title Case** for the lead term in any list (e.g., **1. Infinite Capacity**).
-> - **Glossary Style**: **Bold Title Case**: followed by the definition (e.g., **Micro-Entity**: Definition).
-> - **Semantic Rule**: Use skill-based verbs (*precision*, *orchestration*, *judgment*). Avoid machine language (*automation*, *bots*).
-> - **Zero Quotation**: No quotation marks. Ever.
-> - **Body Bolding**: None allowed in standard paragraphs.
+> - **Engineer's Stance**:
+    - **Affirmative Framing**: Define what a concept IS. Never use "not just about" or "is not X."
+    - **No Contractions**: Write all words in full (e.g., "do not" instead of "don't").
+    - **No Dashes**: Never use em-dashes (—) or en-dashes (–). Use commas or periods.
+    - **Vocabulary**: Use skill-based verbs (*precision*, *orchestration*). Avoid machine language.
+- **Glossary Style**: **Bold Title Case**: followed by the definition.
+- **Zero Quotation**: No quotation marks.
 
 ---
 

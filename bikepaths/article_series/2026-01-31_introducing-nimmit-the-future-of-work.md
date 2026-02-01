@@ -2,11 +2,11 @@
 
 Have you ever felt like you are working more, but growing less?
 
-For many solo founders and small business owners, the biggest wall is *time*. You want to scale your vision, but you don't want the stress of managing a large, traditional team. You find yourself caught in a *friction trap*, spending your day answering emails and fixing small mistakes instead of doing the work that matters.
+For many solo founders and small business owners, the biggest wall is *time*. You want to scale your vision, but you do not want the stress of managing a large, traditional team. You find yourself caught in a *friction trap*, spending your day answering emails and fixing small mistakes instead of doing the work that matters.
 
 At *Nimmit*, we are building a new way to work.
 
-We believe the solution is not just more people or simply AI. The answer is *ai-powered teams*. We are building a global talent hub that empowers high-skill human experts with advanced *artificial intelligence* systems to help you scale instantly.
+We believe the solution requires the integration of human talent and artificial intelligence. The answer is *ai-powered teams*. We are building a global talent hub that empowers high-skill human experts with advanced *artificial intelligence* systems to help you scale instantly.
 
 ### Why This Matters
 

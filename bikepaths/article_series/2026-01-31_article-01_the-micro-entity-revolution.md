@@ -2,7 +2,7 @@
 
 Have you ever felt like you are working more, but achieving less?
 
-Imagine you are a talented designer or a brilliant coder. You started your business because you love your craft. But now, your days are filled with things you don't enjoy:
+Imagine you are a talented designer or a brilliant coder. You started your business because you love your craft. But now, your days are filled with things you do not enjoy:
 
 - Answering many emails.
 - Fixing small mistakes made by others.
@@ -13,7 +13,7 @@ You are caught in a *friction trap*.
 ### The Problem With Growing Big
 Typically, when a business wants to grow, the answer is to *hire more people*. But for the individual founder, hiring creates a new problem. Instead of doing the creative work you enjoy, you end up spending your time *managing* and instructing others. 
 
-Economists call this *transaction costs*, but we call it a *management tax*. If you spend 2 hours explaining a task that takes 1 hour to finish, you haven't gained anything. You've only added *friction* to your life.
+Economists call this *transaction costs*, but we call it a *management tax*. If you spend 2 hours explaining a task that takes 1 hour to finish, you haven't gained anything. You have only added *friction* to your life.
 
 ### The Micro-Entity
 At Nimmit, we believe there is a better way to grow a business. We call this becoming a *micro-entity*.
