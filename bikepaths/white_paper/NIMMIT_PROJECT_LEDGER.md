@@ -59,6 +59,7 @@ This document serves as the central "Source of Truth" for the Nimmit platform ev
 
 | Date | Action | Description | Pointer |
 | :--- | :--- | :--- | :--- |
+| 2026-01-31 | **Article 6 PD** | [x] Track 14: Blog Production (Article 6) <!-- id: 71 --> <br> &nbsp;&nbsp;&nbsp;&nbsp;- [x] Draft Article 6 PD: "Your Global Team" <!-- id: 72 --> <br> &nbsp;&nbsp;&nbsp;&nbsp;- [x] Perform style audit (Minimalist v4) <!-- id: 73 --> <br> &nbsp;&nbsp;&nbsp;&nbsp;- [x] Sync FD to repository <!-- id: 74 --> | `article_series/` |
 | 2026-01-31 | **Article 5 PD** | Drafted "Why Cheap is Expensive" (Reliability intro). | `article_series/` |
 | 2026-01-31 | **Article 4 PD** | Drafted "Piloting Your Pod" (Human-AI synergy). | `article_series/` |
 | 2026-01-31 | **Glossary Norm** | Standardized glossary style (Bold Title Case + Colon) across all articles. | `article_series/` |
