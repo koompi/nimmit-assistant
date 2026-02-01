@@ -32,7 +32,7 @@ Nimmit provides systems that reduce the burden of management. Our goal is to del
 We build a digital memory that never forgets your rules by building a *context cloud*. By putting your intelligence into a system instead of a person, you can scale your business without increasing the *friction*.
 
 ### What is Next?
-Now that we understand why traditional hiring is a tax, we need to look at the solution. In our next article, we will introduce the *context cloud* and show you how a computer can remember your brand better than you do.
+Now that we understand why traditional hiring is a tax, the next step involves the solution. In our next article, we will introduce the *context cloud* and show you how a computer can remember your brand better than you do.
 
 The future belongs to those who own their systems, not those who manage people.
 

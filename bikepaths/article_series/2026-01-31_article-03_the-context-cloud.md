@@ -33,7 +33,7 @@ By putting your intelligence into a system instead of a person, you own your bus
 
 ### What is Next?
 
-Now that you have a system that remembers, you need to know how to lead it. In our next article, we will show you how to lead a *virtual pod* and how humans and *artificial intelligence* work together in a perfect loop.
+Now that you have a system that remembers, leading the system is the final stage. In our next article, we will show you how to lead a *virtual pod* and how humans and *artificial intelligence* work together in a perfect loop.
 
 Success results from working smarter. Building a dependable intelligence system that remembers everything about your business is the key to making your life easier.
 
