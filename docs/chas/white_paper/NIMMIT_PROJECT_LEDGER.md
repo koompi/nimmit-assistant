@@ -62,6 +62,8 @@ This document serves as the central "Source of Truth" for the Nimmit platform ev
 | 2026-01-31 | **Foundation Notes** | Standardized `reandom-noetes.md` into `2026-01-31_nimmit_research_notes.md`. | `source/research/` |
 | 2026-01-31 | **Ledger Update** | Formalized Publication Strategy and Dynamic Draft status. | `NIMMIT_PROJECT_LEDGER.md` |
 | 2026-01-31 | **Article 2 PD** | Drafted "The Management Tax" (Transaction Costs intro). | `article_series/` |
+| 2026-01-31 | **Article 3 PD** | Drafted "The Context Cloud" (System memory intro). | `article_series/` |
+| 2026-01-31 | **Style Norm** | Performed "Zero Quote / Minimalist" normalization across all docs. | `article_series/` |
 | 2026-01-31 | **Style Codified** | Established "Italicized Minimalist" formatting protocol (Italics/Pedagogy). | `NIMMIT_PROJECT_LEDGER.md` |
 | 2026-01-31 | **Article 1 Final** | Finalized Title and Tone adjustments based on user feedback. | `article_series/` |
 | 2026-01-31 | **Article 1 PD** | Drafted "The New Way to Work" (Micro-Entity introduction). | `article_series/` |
