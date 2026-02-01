@@ -35,18 +35,19 @@ This document serves as the central "Source of Truth" for the Nimmit platform ev
 - **Rule**: No articles from the 6-part series shall be published until the **entire series is complete** and verified for consistency.
 - **Exception**: A single "Introductory Teaser" article may be released early to introduce Nimmit and build anticipation.
 
-### Git Repository (Remote: `origin main`)
+### Git Repository (Branch: `bikepaths`)
 - **Base Directory**: `/home/user0/git/nimmit`
-- **White Paper Path**: `docs/chas/white_paper/`
-- **Insights Path**: `docs/chas/fresh_insights/`
+- **Top-Level Content Path**: `bikepaths/`
+- **White Paper Path**: `bikepaths/white_paper/`
+- **Insights Path**: `bikepaths/fresh_insights/`
 
 ---
 
 ## 3. Resource Index
-- **Final WP Draft**: [Nimmit_Whitepaper_v2_Simplification_Draft.md](file:///home/user0/files/workspace/inbox/nimmit_white_paper/Nimmit_Whitepaper_v2_Simplification_Draft.md)
-- **Living Glossary**: [glossary.md](file:///home/user0/git/nimmit/docs/chas/white_paper/source/glossary.md)
-- **Foundation Research**: [2026-01-31_nimmit_research_notes.md](file:///home/user0/files/workspace/inbox/nimmit_white_paper/source/2026-01-31_nimmit_research_notes.md)
-- **Blog Series Plan**: [2026-01-31_blog_series_plan_v1.md](file:///home/user0/files/workspace/inbox/fresh_ideas/fresh_insights/article_series/notes/2026-01-31_blog_series_plan_v1.md)
+- **Final WP Draft**: [Nimmit_Whitepaper_v2_Simplification_Draft.md](file:///home/user0/files/workspace/inbox/nimmit/white_paper/Nimmit_Whitepaper_v2_Simplification_Draft.md)
+- **Living Glossary**: [glossary.md](file:///home/user0/files/workspace/inbox/nimmit/white_paper/source/glossary.md)
+- **Foundation Research**: [2026-01-31_nimmit_research_notes.md](file:///home/user0/files/workspace/inbox/nimmit/white_paper/source/2026-01-31_nimmit_research_notes.md)
+- **Blog Series Plan**: [2026-01-31_blog_series_plan_v1.md](file:///home/user0/files/workspace/inbox/nimmit/fresh_insights/article_series/notes/2026-01-31_blog_series_plan_v1.md)
 
 ---
 
