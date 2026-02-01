@@ -1,6 +1,6 @@
 ### The Management Tax: Why Growing Your Team Slows You Down
 
-When a solo business starts to succeed, the founder usually makes a choice: *hire help*.
+When your solo business starts to succeed, you usually make a choice: *hire help*.
 
 It seems like a logical move. If you have more work than time, you hire someone to do the work, right? But for many, this is where the trouble begins. Instead of getting more work done, you find yourself sitting in meetings, answering questions, and fixing mistakes.
 
@@ -27,12 +27,12 @@ Because they lack this *context*, they will inevitably make a small mistake. You
 This cycle of checking and re-checking is the heaviest part of the *management tax*. It is the reason why many solo founders feel "stuck" at a certain level of success.
 
 ### Deleting the Tax
-The goal of Nimmit is not to give you more people to manage. Our goal is to delete the *transaction costs* of growth.
+Nimmit provides systems that reduce the burden of management. Our goal is to delete the *transaction costs* of growth.
 
 We build a digital memory that never forgets your rules by building a *context cloud*. By putting your intelligence into a system instead of a person, you can scale your business without increasing the *friction*.
 
 ### What is Next?
-Now that we understand why traditional hiring is a tax, we need to look at the solution. In our next article, we will introduce the *context cloud* and show you how a computer can remember your brand better than you do.
+Now that we understand why traditional hiring is a tax, the next step involves the solution. In our next article, we will introduce the *context cloud* and show you how a computer can remember your brand better than you do.
 
 The future belongs to those who own their systems, not those who manage people.
 
@@ -40,6 +40,6 @@ The future belongs to those who own their systems, not those who manage people.
 
 ### Glossary Check
 
-**transaction costs** The time and effort spent to coordinate, communicate, and manage a task, separate from the actual work itself.
+**Transaction Costs**: The time and effort spent to coordinate, communicate, and manage a task, separate from the actual work itself.
 
-**management tax** The hidden costs of hiring and managing employees, including communication overhead, training time, and the cost of mistakes.
+**Friction**: The resistance or loss of momentum caused by inefficient communication, misaligned context, and the overhead of managing people instead of leading systems.
