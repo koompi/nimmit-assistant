@@ -29,12 +29,17 @@ This cycle of checking and re-checking is the heaviest part of the *management t
 ### Deleting the Tax
 The goal of Nimmit is not to give you "more people to manage." Our goal is to delete the *transaction costs* of growth.
 
-We do this by building a *context cloud*—a digital memory that never forgets your rules. By putting your intelligence into a system instead of a person, you can scale your business without increasing the *friction*.
+We build a digital memory that never forgets your rules by building a *context cloud*. By putting your intelligence into a system instead of a person, you can scale your business without increasing the *friction*.
 
 ### What is Next?
 Now that we understand why traditional hiring is a "tax," we need to look at the solution. In our next article, we will introduce the *context cloud* and show you how a computer can remember your brand better than you do.
 
-**The future belongs to those who own their systems, not those who manage people.**
+The future belongs to those who own their systems, not those who manage people.
 
 ---
-Glossary Check: **transaction costs** – The time and effort spent to coordinate, communicate, and manage a task, separate from the actual work itself.
+
+### Glossary Check
+
+**transaction costs** The time and effort spent to coordinate, communicate, and manage a task, separate from the actual work itself.
+
+**management tax** The hidden costs of hiring and managing employees, including communication overhead, training time, and the cost of mistakes.
