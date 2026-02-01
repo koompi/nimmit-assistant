@@ -18,9 +18,9 @@ We are building software, creating high-value jobs for global talents while givi
 
 Over the next few weeks, we will be releasing a special series called *the future of solo work*. We will take you behind the scenes of the Nimmit model and show you:
 
-*   the micro-entity: How one person can run a global-scale business.
-*   the context cloud: Why a system that remembers your rules is better than a manager.
-*   the power of the hub: A look inside our Cambodia operations and why *ai-powered teams* are the best way to scale.
+*   **the micro-entity**: How one person can run a global-scale business.
+*   **the context cloud**: Why a system that remembers your rules is better than a manager.
+*   **the power of the hub**: A look inside our Cambodia operations and why *ai-powered teams* are the best way to scale.
 
 This is a new era for humans and AI to work together.
 
