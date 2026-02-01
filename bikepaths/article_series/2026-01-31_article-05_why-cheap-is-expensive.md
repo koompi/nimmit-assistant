@@ -2,7 +2,7 @@
 
 When you look for help online, it is very easy to find workers who charge five dollars per hour. It sounds like a great deal for a solo founder. But if you have hired workers online, you know the truth: "cheap" labor is often the most expensive choice you can make.
 
-The reason is simple: When you pay for hours, the worker is focused on the clock. If they make a mistake because they do not understand your *context*, you pay the price in time, stress, and *friction*.
+The reason is simple: When you pay for hours, the worker is focused on the clock. If they make a mistake because they don't understand your *context*, you pay the price in time, stress, and *friction*.
 
 ### Hidden Cost of Mistakes
 

@@ -2,7 +2,7 @@
 
 Have you ever felt like you are working more, but achieving less?
 
-Imagine you are a talented designer or a brilliant coder. You started your business because you love your craft. But now, your days are filled with things you do not enjoy:
+Imagine you are a talented designer or a brilliant coder. You started your business because you love your craft. But now, your days are filled with things you no longer enjoy:
 
 - Answering many emails.
 - Fixing small mistakes made by others.
