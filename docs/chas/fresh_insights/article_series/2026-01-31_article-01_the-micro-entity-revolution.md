@@ -10,7 +10,7 @@ Imagine you are a talented graphic designer or a brilliant coder. You started yo
 
 You are caught in a *friction trap*.
 
-### the problem with growing big
+### The Problem With Growing Big
 Typically, when a business wants to grow, the answer is to *hire more people*. But for a solo founder, hiring creates a new problem. Instead of doing your work, you spend your entire day *managing people*. 
 
 Economists call this *transaction costs*. We call it *the management tax*. If you spend 2 hours explaining a task that only takes 2 hours to finish, you haven't gained anything. You have only added friction to your life.
@@ -20,9 +20,9 @@ At Nimmit, we believe there is a better way. We call it becoming a *micro-entity
 
 A micro-entity is a business of one person (or a very small team) that has the power of a large corporation. How? By using *systems* instead of *managerial teams*.
 
-Instead of trying to find and train "perfect" employees, the micro-entity uses an "operating system for work." This system handles the memory, the boring tasks, and the small details for you.
+Instead of trying to find and train perfect employees, the micro-entity uses an operating system for work. This system handles the memory, the boring tasks, and the small details for you.
 
-### why this matters for you
+### Why This Matters for You
 When you stop being a manager and start being a *pilot*, everything changes:
 1.  **infinite capacity**: You can take on 5x more clients without working 5x more hours.
 2.  **no recruitment stress**: You don't have to worry about people leaving or repeating the same training.
