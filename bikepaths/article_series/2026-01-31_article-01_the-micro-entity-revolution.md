@@ -37,5 +37,7 @@ Are you ready to stop managing and start scaling? Welcome to the micro-entity re
 
 **Micro-Entity**: A high-powered business operated by a solo founder using advanced systems and artificial intelligence instead of large human teams.
 
+**Management Tax**: The hidden costs of hiring and managing employees, including communication overhead, training time, and the cost of mistakes.
+
 
 
